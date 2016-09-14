@@ -1,2 +1,5 @@
-def prueba1():
-    print "Yolo"
+from users.models import CustomUser
+
+def getTutor():
+    tutor = CustomUser()
+    return tutor

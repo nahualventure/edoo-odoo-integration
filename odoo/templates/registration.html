@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+{% load toolbar_extras %}
+{% load dashboard_extras %}
+{% load sidebar_extras %}
+{% load get_theme %}
+{% load message_level %}
+{% load user_extras %}
+{% load thumbnail %}
+
+{% block title %}{% trans "Perfil de tutor" %}{% endblock %}
+
+{% block body_class %}administration user-profile tutor{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        TutorProfile({
+            edit_info_button: jQuery("#edit-basic-information-tutor"),
+            cancel_button: jQuery(".bubble .cancel-button"),
+            upload_button: jQuery("#upload-picture"),
+            picture_form_button: jQuery("#id_profile_picture"),
+            picture_form: jQuery("#submit-picture-upload")
+        })
+
+        jQuery(".tutor .remove-student").click(function(e){
+            var $th = jQuery(this),
+                $student = $th.parent(),
+                student_pk = $th.data('student-pk'),
+                $studentThumbnail = jQuery("[data-student-thumbnail-pk=" + student_pk + "]"),
+                $studentThumbnailQtip = jQuery("#" + $studentThumbnail.attr('aria-describedby'));
+
+                console.log(student_pk);
+                console.log($studentThumbnail);
+
+            jQuery.post(
+                '{% url "tutorprofile_remove_student" username=user.username %}',
+                {
+                    student_pk: student_pk,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                function(data){
+                    if(data.status == {% message_level "SUCCESS" %}){
+                        $student.removeClass("show");
+                        $studentThumbnail.removeClass("show");
+                        $studentThumbnailQtip.remove();
+                        setTimeout(function() {
+                            $student.remove();
+                            $studentThumbnail.remove();
+                        }, ANIMATION_SPEEDS['smooth']);
+                    }
+                }
+            );
+        });
+
+    </script>
+{% endblock %}
+
+{% block content %}
+    {% edoo_toolbar dashboard %}
+    {% edoo_sidebar 'dashboard' %}
+
+    <div class="content-viewport">
+
+        <div class="profile-header">
+            <div class="user">
+                <div class="picture">
+                    <div class="picture-container">
+
+                        {% if user.profile_picture %}
+                            {% thumbnail user.profile_picture "135x135" crop="center" as im %}
+                                <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
+                            {% endthumbnail %}
+                        {% endif %}
+
+                        <div class="veil"></div>
+                    </div>
+                    <div class="upload-picture-container">
+{#                            <a class="button button-small button-info disabled"><i class="icon icon-camera"></i> {% trans "Tomar foto" %}</a> #}
+                        <form enctype="multipart/form-data" method="POST" id="submit-picture-upload"  action="{% url "change_profile_picture" username=user.username %}">
+                            {% csrf_token %}
+                            <div class="photo-upload-wrapper">
+                                <a id="upload-picture" class="upload-picture-button"><i class="icon icon-camera"></i></a>
+                                {{ user_picture_form.profile_picture }}
+                            </div>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+
+                <div class="data">
+                    <a class="name" href="{% url 'userprofile' username=user.username %}">
+                        {{ user.formal_name }}
+                    </a>
+
+                    <div class="level">
+                        {% trans "Padre de Familia" %}
+                    </div>
+
+                    <div class="student-section">
+                        {% for student in tutor_students %}
+
+                            <span class="student-picture show" data-student-thumbnail-pk="{{ student.user.pk }}"
+                                  data-title="{{ student.user.formal_name }}" data-title-class="white">
+                                {% if student.user.profile_picture %}
+                                    {% thumbnail student.user.profile_picture "35x35" crop="center" as im %}
+                                        <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
+                                    {% endthumbnail %}
+                                {% endif %}
+                            </span>
+
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+        </div>
+
+        <div class="container main-content tutor-profile">
+            <div class="bubble">
+                <form class="basic-information" method="POST" action="{% url 'edit_teacher_profile' username=user.username %}">
+                    {% csrf_token %}
+                    <div class="inner-title">
+                        <h2>
+                            <i class="icon icon-user"></i>
+                            <span>
+                                Información Básica
+                            </span>
+                        </h2>
+
+                        <div class="main-action">
+                            <a class="button button-small" id="edit-basic-information-tutor"><i class="icon icon-edit"></i> {% trans "Editar" %}</a>
+
+                            <span class="edition-controllers hide">
+                                <a class="button button-small cancel-button">{% trans "Cancelar" %}</a>
+                                <button class="button button-primary button-small to-load save-button" type="submit">{% trans "Guardar" %}</button>
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <hr>
+
+                    <div class="table">
+                        <div class="row">
+                            <div class="row-label">{% trans "Nombre:" %}</div>
+                            <div class="row-value">
+                                {% if user.formal_name %}
+                                    {{ user.formal_name }}
+                                {% else %}
+                                    {% trans "Sin especificar" %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="row-label">{% trans "Teléfono:" %}</div>
+                            <div class="row-value">
+                                {% if user.phone %}
+                                    {{ user.phone}}
+                                {% else %}
+                                    {% trans "Sin especificar" %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="row-label">{% trans "Email:" %}</div>
+                            <div class="row-value">{{ user.email }}</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="row-label">{% trans "Dirección:" %}</div>
+                            <div class="row-value">
+                                {% if user.address %}
+                                    {{ user.address }}
+                                {% else %}
+                                    {% trans "Sin especificar" %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="form hide tutor-info">
+
+                        <div class="panel-row">
+                            <div class="left-panel">
+                                <label class="tutor-info-label">{{ user_profile_form.first_name.label  }}</label>
+
+                                <div class="input-wrapper placeholded">
+                                    {{ user_profile_form.first_name }}
+                                    {{ user_profile_form.first_name.errors }}
+                                </div>
+                            </div>
+
+                            <div class="right-panel">
+                                <label class="tutor-info-label">{{ user_profile_form.last_name.label  }}</label>
+
+                                <div class="input-wrapper placeholded">
+                                    {{ user_profile_form.last_name }}
+                                    {{ user_profile_form.last_name.errors }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-row">
+                            <div class="left-panel">
+                                <label class="tutor-info-label">{{ user_profile_form.email.label  }}</label>
+
+                                <div class="input-wrapper placeholded">
+                                    {{ user_profile_form.email }}
+                                    {{ user_profile_form.email.errors }}
+                                </div>
+                            </div>
+
+                            <div class="right-panel">
+                                <label class="tutor-info-label">{{ user_profile_form.birthdate.label  }}</label>
+
+                                <div class="inline-calendar-wrapper inline-calendar-float">
+                                    <div class="input-wrapper loffset-70 placeholded">
+                                        <span class="form-input-tag">
+                                            <i class="icon icon-calendar-o"></i>
+                                        </span>
+                                        {{ user_profile_form.birthdate.label_tag }}
+                                        {{ user_profile_form.birthdate }}
+                                        {{ user_profile_form.birthdate.errors }}
+                                    </div>
+                                    <div class="inline-calendar-renderer"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-row">
+                            <div class="left-panel">
+                                <label class="tutor-info-label">{{ user_profile_form.phone.label  }}</label>
+
+                                <div class="input-wrapper placeholded">
+                                    {{ user_profile_form.phone }}
+                                    {{ user_profile_form.phone.errors }}
+                                </div>
+                            </div>
+
+                            <div class="right-panel">
+                                <label class="tutor-info-label">{{ user_profile_form.nationality.label  }}</label>
+
+                                <div class="input-wrapper placeholded">
+                                    {{ user_profile_form.nationality }}
+                                    {{ user_profile_form.nationality.errors }}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </form>
+            </div>
+
+            <div class="bubble tutor-students">
+                <div class="inner-title">
+                    <h2><i class="icon icon-users"></i> <span>{% trans "Estudiantes a Cargo" %}</span></h2>
+                </div>
+
+                <hr>
+
+                <div class="students-container">
+                    {% for student in tutor_students %}
+
+
+                        <div class="user-card compress student-wrapper show">
+                            {% cano perm='userprofiles.remove_tutorprofile' obj=user.studentprofile as remove_perm %}
+                            {% if remove_perm %}
+                                <a class="close remove-student to-load" data-student-pk="{{ student.user.pk }}"><i class="icon icon-times"></i></a>
+                            {% endif %}
+
+                            {% if student.user.profile_picture %}
+                                <img class="picture" src="{{ student.user.profile_picture.url }}">
+                            {% endif %}
+
+                            <div class="data">
+                                <div class="name">{{ student.user.formal_name }}</div>
+                                <div class="extra-data">{{ student.level }}</div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="no-results no-results-horizontal no-results-small" style="padding-left:130px;">
+                            <img style="margin-top:10px;" src="{% static 'images/placeholders/students_small.png' %}" width="109" height="100">
+                            <div class="no-results-title">
+                                {% blocktrans with tname=user.first_name %}
+                                    <strong>{{ tname }}</strong> no tiene estudiantes a su cargo.
+                                {% endblocktrans %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
