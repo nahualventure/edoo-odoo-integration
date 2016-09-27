@@ -2,9 +2,6 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 
-CONTRACTS = {
-
-}
 
 class OdooProfile(models.Model):
     content_type = models.ForeignKey(ContentType, related_name="content_type_timelines")

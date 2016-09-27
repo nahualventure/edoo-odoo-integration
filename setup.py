@@ -27,7 +27,7 @@ setup(
     long_description=read('README.rst'),
     author='Oscar Gil',
     author_email='info@edoo.io',
-    url='https://github.com/oscaresgil/academic-odoo',
+    url='https://github.com/oscaresgil/academic-integrations',
     packages=find_packages(),
     install_requires=[],
 )
