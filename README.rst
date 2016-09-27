@@ -1,5 +1,9 @@
-#############
-Academic-odoo
-#############
+#####################
+Academic-integrations
+#####################
 
-Paquete de extensión para Edoo académico que añade la funcionalidad de **contabilidad**.
+Paquete de extensiones para Edoo académico.
+
+Integraciones:
+--------------
+- Odoo: módulo de **contabilidad**.

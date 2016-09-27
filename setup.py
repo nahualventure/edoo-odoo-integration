@@ -20,10 +20,10 @@ def find_version(*parts):
 
 
 setup(
-    name='academic-odoo',
+    name='academic-integrations',
     version=find_version('odoo', '__init__.py'),
-    description='Una extensión de odoo (sistema contable), '
-                'para edoo académico.',
+    description='Un sistema de integraciones para edoo académico.'
+                '\n- Extensión de odoo (sistema contable)',
     long_description=read('README.rst'),
     author='Oscar Gil',
     author_email='info@edoo.io',
