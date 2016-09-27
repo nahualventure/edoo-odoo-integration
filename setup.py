@@ -21,7 +21,7 @@ def find_version(*parts):
 
 setup(
     name='academic-integrations',
-    version=find_version('odoo', '__init__.py'),
+    version=find_version('integrations', '__init__.py'),
     description='Un sistema de integraciones para edoo académico.'
                 '\n- Extensión de odoo (sistema contable)',
     long_description=read('README.rst'),
