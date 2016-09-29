@@ -3,6 +3,9 @@ include LICENSE.txt
 
 # Include the data files
 recursive-include integrations *
+recursive-include integrations/odoo/templates *
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
 
 # If using Python 2.6 or less, then have to include package data, even though
 # it's already declared in setup.py
