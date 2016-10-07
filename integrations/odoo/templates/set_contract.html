@@ -1,10 +1,295 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% load staticfiles %}
+{% load i18n %}
+{% load toolbar_extras %}
+{% load dashboard_extras %}
+{% load sidebar_extras %}
+{% load get_theme %}
+{% load thumbnail %}
 
-</body>
-</html>
+{% block title %}{% trans "Selección de Contrato" %}{% endblock %}
+
+{% block body_class %}administration user-profile teacher{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        TeacherProfile({
+            edit_info_button: jQuery("#edit-basic-information-teacher"),
+            cancel_button: jQuery(".bubble .cancel-button"),
+            upload_button: jQuery("#upload-picture"),
+            picture_form_button: jQuery("#id_profile_picture"),
+            picture_form: jQuery("#submit-picture-upload")
+        })
+
+    </script>
+{% endblock %}
+
+{% block content %}
+    {% edoo_toolbar dashboard %}
+    {% edoo_sidebar 'dashboard' %}
+
+    <div class="content-viewport">
+
+        <div class="profile-header">
+            <div class="user">
+                <div class="picture">
+                    <div class="picture-container">
+
+                        {% if user.profile_picture %}
+                            {% thumbnail user.profile_picture "135x135" crop="center" as im %}
+                                <img src="{{ im.url }}" width="{{ im.width }}" height="{{ im.height }}">
+                            {% endthumbnail %}
+                        {% endif %}
+
+                    </div>
+                </div>
+
+
+                <div class="data">
+                    <a class="name" href="{% url 'userprofile' username=user.username %}">
+                        {{ user.formal_name }}
+                    </a>
+
+                    <div class="level">
+                        {% if student.level %}
+                            {{ student.level }}
+                        {% else %}
+                            {% trans "Maestro" %}
+                        {% endif %}
+                    </div>
+
+                    <div class="degree">
+                        <span class="degree-label">{% trans "Título:" %}</span>
+                        <span class="degree-value">
+                            {% if teacher_profile.degree %}
+                                {{ teacher_profile.degree }}
+                            {% else %}
+                                {% trans "Maestro" %}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+        </div>
+
+        <div class="container main-content teacher-profile">
+            <div class="bubble">
+                <form class="basic-information" method="POST" action="{% url 'edit_teacher_profile' username=user.username %}">
+                    {% csrf_token %}
+                    <div class="inner-title">
+                        <h2>
+                            <i class="icon icon-user"></i>
+                            <span>
+                                {% blocktrans with name=user.first_name %}
+                                    Acerca de {{ name }}
+                                {% endblocktrans %}
+                            </span>
+                        </h2>
+
+                        <div class="main-action">
+                            <a class="button button-small" id="edit-basic-information-teacher"><i class="icon icon-edit"></i> {% trans "Editar" %}</a>
+
+                            <span class="edition-controllers hide">
+                                <a class="button button-small cancel-button">{% trans "Cancelar" %}</a>
+                                <button class="button button-primary button-small to-load save-button" type="submit">{% trans "Guardar" %}</button>
+                            </span>
+                        </div>
+
+                    </div>
+
+                    <hr>
+
+                    <div class="table">
+                        <div class="row">
+                            <div class="row-label">{% trans "Pequeña biografía:" %}</div>
+                            <div class="row-value">
+                                {% if teacher_profile.short_bio %}
+                                    {{ teacher_profile.short_bio }}
+                                {% else %}
+                                    {% trans "Sin especificar" %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="row-label">{% trans "Título:" %}</div>
+                            <div class="row-value">
+                                {% if user.teacherprofile.degree %}
+                                    {{ user.teacherprofile.degree}}
+                                {% else %}
+                                    {% trans "Sin especificar" %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="row-label">{% trans "Cumpleaños:" %}</div>
+                            <div class="row-value">
+                                {% if user.birthdate %}
+                                    {{ user.birthdate }}
+                                {% else %}
+                                    {% trans "Sin especificar" %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="row-label">{% trans "Nacionalidad:" %}</div>
+                            <div class="row-value">
+                                {% if user.nationality %}
+                                    {{ user.nationality }}
+                                {% else %}
+                                    {% trans "Sin especificar" %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="row-label">{% trans "Correo:" %}</div>
+                            <div class="row-value">{{ user.email }}</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="row-label">{% trans "Teléfono:" %}</div>
+                            <div class="row-value">
+                                {% if user.phone %}
+                                    {{ user.phone }}
+                                {% else %}
+                                    {% trans "Sin especificar" %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="row-label">{% trans "Website / Blog:" %}</div>
+
+                            <div class="row-value">
+                                {% if teacher_profile.website %}
+                                    <a href="{{ teacher_profile.website }}" target="_blank">{{ teacher_profile.website }}</a>
+                                {% else %}
+                                    {% trans "Sin especificar" %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="form hide teacher-info">
+
+                        <div class="panel-row">
+                            <div class="full-panel">
+                                <label class="teacher-info-label">{{ teacher_profile_form.short_bio.label  }}</label>
+                                <div class="input-wrapper area placeholded">
+                                    {{ teacher_profile_form.short_bio }}
+                                    {{ teacher_profile_form.short_bio.errors }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="panel-row">
+                            <div class="left-panel">
+                                <label class="teacher-info-label">{{ teacher_profile_form.website.label  }}</label>
+
+                                <div class="input-wrapper placeholded">
+                                    {{ teacher_profile_form.website }}
+                                    {{ teacher_profile_form.website.errors }}
+                                </div>
+                            </div>
+
+                            <div class="right-panel">
+                                <label class="teacher-info-label">{{ teacher_profile_form.degree.label  }}</label>
+
+                                <div class="input-wrapper placeholded">
+                                    {{ teacher_profile_form.degree }}
+                                    {{ teacher_profile_form.degree.errors }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-row">
+                            <div class="left-panel">
+                                <label class="teacher-info-label">{{ user_profile_form.email.label  }}</label>
+
+                                <div class="input-wrapper placeholded">
+                                    {{ user_profile_form.email }}
+                                    {{ user_profile_form.email.errors }}
+                                </div>
+                            </div>
+
+                            <div class="right-panel">
+                                <label class="teacher-info-label">{{ user_profile_form.birthdate.label  }}</label>
+
+                                <div class="inline-calendar-wrapper inline-calendar-float">
+                                    <div class="input-wrapper loffset-70 placeholded">
+                                        <span class="form-input-tag">
+                                            <i class="icon icon-calendar-o"></i>
+                                        </span>
+                                        {{ user_profile_form.birthdate.label_tag }}
+                                        {{ user_profile_form.birthdate }}
+                                        {{ user_profile_form.birthdate.errors }}
+                                    </div>
+                                    <div class="inline-calendar-renderer"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-row">
+                            <div class="left-panel">
+                                <label class="teacher-info-label">{{ user_profile_form.phone.label  }}</label>
+
+                                <div class="input-wrapper placeholded">
+                                    {{ user_profile_form.phone }}
+                                    {{ user_profile_form.phone.errors }}
+                                </div>
+                            </div>
+
+                            <div class="right-panel">
+                                <label class="teacher-info-label">{{ user_profile_form.nationality.label  }}</label>
+
+                                <div class="input-wrapper placeholded">
+                                    {{ user_profile_form.nationality }}
+                                    {{ user_profile_form.nationality.errors }}
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+            </form>
+            </div>
+
+            <div class="bubble offered-courses">
+                <div class="inner-title">
+                    <h2><i class="icon icon-book"></i> <span>{% trans "Cursos" %}</span></h2>
+                </div>
+
+                <hr>
+
+                <div class="sections-container">
+                    {% for section in teacher_sections %}
+
+                        <div class="section">
+                            <div class="header">
+                                <div class="title-bar" style="background-color: {{ section.course.agenda.color }};">
+                                    <div class="icon-floater">
+                                        <i class="icon icon-{{ section.course.agenda.icon }}"></i>
+                                    </div>
+
+                                    <div class="title">{{ section.course.agenda.name }}</div>
+                                    <div class="subtitle">{{ section.course.agenda.level }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="no-results no-results-horizontal no-results-small" style="padding-left:130px;">
+                            <img style="margin-top:10px;" src="{% static 'images/placeholders/courses_small.png' %}" width="109" height="100">
+                            <div class="no-results-title">
+                                {% blocktrans with tname=user.first_name %}
+                                    <strong>{{ tname }}</strong> aún no ha sido asignado a ningún curso
+                                {% endblocktrans %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

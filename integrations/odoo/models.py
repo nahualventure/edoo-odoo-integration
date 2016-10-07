@@ -1,10 +1,9 @@
-from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
 
+class Odoo:
+    # main URL of API
+    BASE_URL        =   "https://api.github.com"
+    CONTRACT        =   BASE_URL + "/contract"
+    CLIENT          =   BASE_URL + "/client"
+    DISCOUNT        =   BASE_URL + "/discount"
 
-class OdooProfile(models.Model):
-    content_type = models.ForeignKey(ContentType, related_name="content_type_timelines")
-    object_id = models.PositiveIntegerField()
-    content_object = generic.GenericForeignKey('content_type', 'object_id')
-    event_type = models.CharField(max_length=250, default="created")
+class OauthOdoo:
