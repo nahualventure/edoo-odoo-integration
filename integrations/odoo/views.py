@@ -11,7 +11,7 @@ from django.views.decorators.http import require_http_methods
 from django.utils.translation import ugettext as _
 from django.contrib.auth import get_user_model
 from utils import services as utilities
-from odoo import controllers
+import controllers
 
 
 
@@ -23,8 +23,8 @@ Edoo user profile management.
 """
 
 __version__ = '0.1.0'
-__author__ = 'Samuel Chávez <me@samuelchavez.com>'
-__date__ = '25 November 2013'
+__author__ = 'Oscar Gil <me@samuelchavez.com>'
+__date__ = '07 October 2016'
 __copyright__ = 'Copyright (c) 2012-2014 Samuel Chávez'
 __license__ = 'THE LICENSE'
 __status__ = 'development'
