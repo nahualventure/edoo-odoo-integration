@@ -1,30 +1,14 @@
 # -*- coding: utf-8 -*-
 
-from collections import Counter
-from datetime import timedelta
-from django.conf import settings
 from django.contrib.auth import get_user_model
-
 from django.utils.translation import ugettext as _
 
-from .models import (
+from userprofiles.models import (
     StudentTutorRelationship,
     TutorProfile,
-    TeacherProfile,
-    StudentProfile,
-    MedicalProfile,
-    Allergy,
-    MedicalCondition,
-    Odoo)
-from users.forms import (
-    InlineEditBasicInfoUserForm,
-    TeacherProfileUserForm,
-    TutorProfileUserForm
-)
-from utils.controllers import ControllerResponse
+    StudentProfile)
 
-from utils import services as utilities
-from userprofiles.models import *
+from utils.controllers import ControllerResponse
 
 """
 Business logic for the odoo module integration
