@@ -1,6 +1,3 @@
-import requests
-
-from .models import Odoo
 from ._api import (
     get_contracts,
     post_client,

@@ -11,7 +11,7 @@ from django.views.decorators.http import require_http_methods
 from django.utils.translation import ugettext as _
 from django.contrib.auth import get_user_model
 from utils import services as utilities
-import controllers
+import _controllers
 
 
 
@@ -39,7 +39,7 @@ def set_contract(request, username):
     **GET**: renders the contract selection page.
     """
 
-    cr = controllers.set_contract(request, username)
+    cr = _controllers.set_contract(request, username)
 
     utilities.place_message(request, cr)
 
