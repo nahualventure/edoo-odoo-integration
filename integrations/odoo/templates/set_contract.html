@@ -5,21 +5,45 @@
 {% load dashboard_extras %}
 {% load sidebar_extras %}
 {% load get_theme %}
+{% load message_level %}
+{% load user_extras %}
 {% load thumbnail %}
 
-{% block title %}{% trans "Selección de Contrato" %}{% endblock %}
+{% block title %}{% trans "Selección de contrato" %}{% endblock %}
 
-{% block body_class %}administration user-profile user_contract {% endblock %}
+{% block body_class %}administration user-profile student_contract{% endblock %}
 
 {% block extra_scripts %}
     <script>
-        TeacherProfile({
-            edit_info_button: jQuery("#edit-basic-information-teacher"),
-            cancel_button: jQuery(".bubble .cancel-button"),
-            upload_button: jQuery("#upload-picture"),
-            picture_form_button: jQuery("#id_profile_picture"),
-            picture_form: jQuery("#submit-picture-upload")
-        })
+        jQuery(".student-contract .remove-student").click(function(e){
+            var $th = jQuery(this),
+                $student = $th.parent(),
+                student_pk = $th.data('student-pk'),
+                $studentThumbnail = jQuery("[data-student-thumbnail-pk=" + student_pk + "]"),
+                $studentThumbnailQtip = jQuery("#" + $studentThumbnail.attr('aria-describedby'));
+
+                console.log(student_pk);
+                console.log($studentThumbnail);
+
+            jQuery.post(
+                '{% url "tutorprofile_remove_student" username=user.username %}',
+                {
+                    student_pk: student_pk,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                function(data){
+                    if(data.status == {% message_level "SUCCESS" %}){
+                        $student.removeClass("show");
+                        $studentThumbnail.removeClass("show");
+                        $studentThumbnailQtip.remove();
+                        setTimeout(function() {
+                            $student.remove();
+                            $studentThumbnail.remove();
+                        }, ANIMATION_SPEEDS['smooth']);
+                    }
+                }
+            );
+        });
 
     </script>
 {% endblock %}
@@ -41,7 +65,9 @@
                             {% endthumbnail %}
                         {% endif %}
 
+                        <div class="veil"></div>
                     </div>
+
                 </div>
 
 
@@ -51,22 +77,23 @@
                     </a>
 
                     <div class="level">
-                        {% if student.level %}
-                            {{ student.level }}
+                        {% if student_profile.level %}
+                            {{ student_profile.level }}
                         {% else %}
-                            {% trans "Maestro" %}
+                            {% trans "Estudiante" %}
                         {% endif %}
                     </div>
 
-                    <div class="degree">
-                        <span class="degree-label">{% trans "Título:" %}</span>
-                        <span class="degree-value">
-                            {% if teacher_profile.degree %}
-                                {{ teacher_profile.degree }}
+                    <div class="contract-selection">
+                        <div class="select-wrapper">
+                            {% if not stage_pk %}
+                                <div class="replace-text">
+                                    {% trans "Mostrando todos los estudiantes" %}
+                                </div>
                             {% else %}
-                                {% trans "Maestro" %}
+                                {{ level_selection_form.level }}
                             {% endif %}
-                        </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -74,7 +101,7 @@
             <hr>
         </div>
 
-        <div class="container main-content teacher-profile">
+        <div class="container main-content tutor-profile">
             <div class="bubble">
                 <form class="basic-information" method="POST" action="{% url 'edit_teacher_profile' username=user.username %}">
                     {% csrf_token %}
@@ -82,14 +109,12 @@
                         <h2>
                             <i class="icon icon-user"></i>
                             <span>
-                                {% blocktrans with name=user.first_name %}
-                                    Acerca de {{ name }}
-                                {% endblocktrans %}
+                                Información Básica
                             </span>
                         </h2>
 
                         <div class="main-action">
-                            <a class="button button-small" id="edit-basic-information-teacher"><i class="icon icon-edit"></i> {% trans "Editar" %}</a>
+                            <a class="button button-small" id="edit-basic-information-tutor"><i class="icon icon-edit"></i> {% trans "Editar" %}</a>
 
                             <span class="edition-controllers hide">
                                 <a class="button button-small cancel-button">{% trans "Cancelar" %}</a>
@@ -103,111 +128,68 @@
 
                     <div class="table">
                         <div class="row">
-                            <div class="row-label">{% trans "Pequeña biografía:" %}</div>
+                            <div class="row-label">{% trans "Nombre:" %}</div>
                             <div class="row-value">
-                                {% if teacher_profile.short_bio %}
-                                    {{ teacher_profile.short_bio }}
+                                {% if user.formal_name %}
+                                    {{ user.formal_name }}
                                 {% else %}
                                     {% trans "Sin especificar" %}
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="row-label">{% trans "Título:" %}</div>
-                            <div class="row-value">
-                                {% if user.teacherprofile.degree %}
-                                    {{ user.teacherprofile.degree}}
-                                {% else %}
-                                    {% trans "Sin especificar" %}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="row-label">{% trans "Cumpleaños:" %}</div>
-                            <div class="row-value">
-                                {% if user.birthdate %}
-                                    {{ user.birthdate }}
-                                {% else %}
-                                    {% trans "Sin especificar" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="row-label">{% trans "Nacionalidad:" %}</div>
-                            <div class="row-value">
-                                {% if user.nationality %}
-                                    {{ user.nationality }}
-                                {% else %}
-                                    {% trans "Sin especificar" %}
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="row-label">{% trans "Correo:" %}</div>
-                            <div class="row-value">{{ user.email }}</div>
-                        </div>
-
                         <div class="row">
                             <div class="row-label">{% trans "Teléfono:" %}</div>
                             <div class="row-value">
                                 {% if user.phone %}
-                                    {{ user.phone }}
+                                    {{ user.phone}}
                                 {% else %}
                                     {% trans "Sin especificar" %}
                                 {% endif %}
                             </div>
+                        </div>
+                        <div class="row">
+                            <div class="row-label">{% trans "Email:" %}</div>
+                            <div class="row-value">{{ user.email }}</div>
                         </div>
 
                         <div class="row">
-                            <div class="row-label">{% trans "Website / Blog:" %}</div>
-
+                            <div class="row-label">{% trans "Dirección:" %}</div>
                             <div class="row-value">
-                                {% if teacher_profile.website %}
-                                    <a href="{{ teacher_profile.website }}" target="_blank">{{ teacher_profile.website }}</a>
+                                {% if user.address %}
+                                    {{ user.address }}
                                 {% else %}
                                     {% trans "Sin especificar" %}
                                 {% endif %}
                             </div>
                         </div>
+
                     </div>
 
 
-                    <div class="form hide teacher-info">
-
-                        <div class="panel-row">
-                            <div class="full-panel">
-                                <label class="teacher-info-label">{{ teacher_profile_form.short_bio.label  }}</label>
-                                <div class="input-wrapper area placeholded">
-                                    {{ teacher_profile_form.short_bio }}
-                                    {{ teacher_profile_form.short_bio.errors }}
-                                </div>
-                            </div>
-                        </div>
+                    <div class="form hide tutor-info medical">
 
                         <div class="panel-row">
                             <div class="left-panel">
-                                <label class="teacher-info-label">{{ teacher_profile_form.website.label  }}</label>
+                                <label class="tutor-info-label">{{ user_profile_form.first_name.label  }}</label>
 
                                 <div class="input-wrapper placeholded">
-                                    {{ teacher_profile_form.website }}
-                                    {{ teacher_profile_form.website.errors }}
+                                    {{ user_profile_form.first_name }}
+                                    {{ user_profile_form.first_name.errors }}
                                 </div>
                             </div>
 
                             <div class="right-panel">
-                                <label class="teacher-info-label">{{ teacher_profile_form.degree.label  }}</label>
+                                <label class="tutor-info-label">{{ user_profile_form.last_name.label  }}</label>
 
                                 <div class="input-wrapper placeholded">
-                                    {{ teacher_profile_form.degree }}
-                                    {{ teacher_profile_form.degree.errors }}
+                                    {{ user_profile_form.last_name }}
+                                    {{ user_profile_form.last_name.errors }}
                                 </div>
                             </div>
                         </div>
                         <div class="panel-row">
                             <div class="left-panel">
-                                <label class="teacher-info-label">{{ user_profile_form.email.label  }}</label>
+                                <label class="tutor-info-label">{{ user_profile_form.email.label  }}</label>
 
                                 <div class="input-wrapper placeholded">
                                     {{ user_profile_form.email }}
@@ -216,7 +198,7 @@
                             </div>
 
                             <div class="right-panel">
-                                <label class="teacher-info-label">{{ user_profile_form.birthdate.label  }}</label>
+                                <label class="tutor-info-label">{{ user_profile_form.birthdate.label  }}</label>
 
                                 <div class="inline-calendar-wrapper inline-calendar-float">
                                     <div class="input-wrapper loffset-70 placeholded">
@@ -233,7 +215,7 @@
                         </div>
                         <div class="panel-row">
                             <div class="left-panel">
-                                <label class="teacher-info-label">{{ user_profile_form.phone.label  }}</label>
+                                <label class="tutor-info-label">{{ user_profile_form.phone.label  }}</label>
 
                                 <div class="input-wrapper placeholded">
                                     {{ user_profile_form.phone }}
@@ -242,7 +224,7 @@
                             </div>
 
                             <div class="right-panel">
-                                <label class="teacher-info-label">{{ user_profile_form.nationality.label  }}</label>
+                                <label class="tutor-info-label">{{ user_profile_form.nationality.label  }}</label>
 
                                 <div class="input-wrapper placeholded">
                                     {{ user_profile_form.nationality }}
@@ -255,34 +237,41 @@
             </form>
             </div>
 
-            <div class="bubble offered-courses">
+            <div class="bubble tutor-students">
                 <div class="inner-title">
-                    <h2><i class="icon icon-book"></i> <span>{% trans "Cursos" %}</span></h2>
+                    <h2><i class="icon icon-users"></i> <span>{% trans "Estudiantes a Cargo" %}</span></h2>
                 </div>
 
                 <hr>
 
-                <div class="sections-container">
-                    {% for section in teacher_sections %}
+                <div class="students-container">
+                    {% for student in tutor_students %}
 
-                        <div class="section">
-                            <div class="header">
-                                <div class="title-bar" style="background-color: {{ section.course.agenda.color }};">
-                                    <div class="icon-floater">
-                                        <i class="icon icon-{{ section.course.agenda.icon }}"></i>
-                                    </div>
 
-                                    <div class="title">{{ section.course.agenda.name }}</div>
-                                    <div class="subtitle">{{ section.course.agenda.level }}</div>
-                                </div>
+                        <div class="user-card compress student-wrapper show">
+                            {% cano perm='userprofiles.remove_tutorprofile' obj=user.studentprofile as remove_perm %}
+                            {% if remove_perm %}
+                                <a class="close remove-student to-load" data-student-pk="{{ student.user.pk }}"><i class="icon icon-times"></i></a>
+                            {% endif %}
+
+                            {% if student.user.profile_picture %}
+                                <a href="{% url "studentprofile" username=student.user.username %}">
+                                    <img class="picture" src="{{ student.user.profile_picture.url }}">
+                                </a>
+
+                            {% endif %}
+
+                            <div class="data">
+                                <div class="name">{{ student.user.formal_name }}</div>
+                                <div class="extra-data">{{ student.level }}</div>
                             </div>
                         </div>
                     {% empty %}
                         <div class="no-results no-results-horizontal no-results-small" style="padding-left:130px;">
-                            <img style="margin-top:10px;" src="{% static 'images/placeholders/courses_small.png' %}" width="109" height="100">
+                            <img style="margin-top:10px;" src="{% static 'images/placeholders/students_small.png' %}" width="109" height="100">
                             <div class="no-results-title">
                                 {% blocktrans with tname=user.first_name %}
-                                    <strong>{{ tname }}</strong> aún no ha sido asignado a ningún curso
+                                    <strong>{{ tname }}</strong> no tiene estudiantes a su cargo.
                                 {% endblocktrans %}
                             </div>
                         </div>
