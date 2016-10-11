@@ -46,5 +46,5 @@ def set_contract(request, username):
     if cr.should_redirect():
         return cr.redirect
 
-    return render(request, 'integrations/odoo/set_contract.html', cr.gets())
+    return render(request, 'set_contract.html', cr.gets())
 
