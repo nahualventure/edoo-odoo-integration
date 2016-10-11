@@ -43,3 +43,5 @@ def set_contract(request, username):
         'user': user,
         'student_profile': student_profile
     })
+
+    return response
