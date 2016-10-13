@@ -9,6 +9,7 @@ from userprofiles.models import (
     StudentProfile)
 
 from utils.controllers import ControllerResponse
+import json
 
 """
 Business logic for the odoo module integration
@@ -39,9 +40,50 @@ def set_contract(request, username):
     # Get student level and contract
     student_level = student_profile.level
 
+    contracts = '[' \
+                    '{' \
+                        '"id": 123' \
+                        '"name": Contract 1' \
+                        '"products: [' \
+                            '{' \
+                                '"id": 1,' \
+                                '"name": "Colegiatura",' \
+                                '"date": "12/05/2016"' \
+                                '"amount: 25.12"' \
+                            '},' \
+                            '{' \
+                                '"id": 2,' \
+                                '"name": "Colegiatura",' \
+                                '"date": "12/05/2016"' \
+                                '"amount: 250.12"' \
+                            '},' \
+                        '],' \
+                    '},' \
+                    '{' \
+                        '"id": 456' \
+                        '"name": Contract 2' \
+                        '"products: [' \
+                            '{' \
+                                '"id": 1,' \
+                                '"name": "Colegiatura extra",' \
+                                '"date": "12/05/2016"' \
+                                '"amount: 125.12"' \
+                            '},' \
+                            '{' \
+                                '"id": 2,' \
+                                '"name": "Colegiatura ex",' \
+                                '"date": "12/05/2016"' \
+                                '"amount: 28.12"' \
+                            '},' \
+                        '],' \
+                    '},' \
+                ']'
+
+
     response.sets({
         'user': user,
-        'student_profile': student_profile
+        'student_profile': student_profile,
+        'contracts': json.loads(contracts)
     })
 
     return response
