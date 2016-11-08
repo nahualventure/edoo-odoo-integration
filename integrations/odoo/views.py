@@ -1,50 +1,52 @@
 # -*- coding: utf-8 -*-
 
-import time
-from integrations import odoo
-from django.utils.translation import ugettext_lazy as _
-
-from django import template
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from django.utils.translation import ugettext as _
-from django.contrib.auth import get_user_model
+
+import controllers
 from utils import services as utilities
-import _controllers
 
 
+@csrf_protect
+@require_http_methods(['GET', 'POST'])
+def get_contract(request, username):
+    """
+    Require: GET, POST
 
-"""
-Presentation layer for the userprofiles application.
+    **GET**: renders the contract selection page.
+    **POST**: process the form submission.
+    """
 
-Python module that provides the interface (API) to all the logic regarding to
-Edoo user profile management.
-"""
+    if request.method == 'GET':
+        cr = controllers.get_contract(request, username)
 
-__version__ = '0.1.0'
-__author__ = 'Oscar Gil <me@samuelchavez.com>'
-__date__ = '07 October 2016'
-__copyright__ = 'Copyright (c) 2012-2014 Samuel Chávez'
-__license__ = 'THE LICENSE'
-__status__ = 'development'
-__docformat__ = 'reStructuredText'
+        utilities.place_message(request, cr)
+
+        if cr.should_redirect():
+            return cr.redirect
+
+        return render(request, 'contract.html', cr.gets())
+
+    elif request.method == 'POST':
+        print ('entra al post')
+        cr = controllers.set_contract(request, username, request.POST)
+
+        utilities.place_message(request, cr)
+
+        return cr.redirect
+
 
 @csrf_protect
 @require_http_methods(['GET'])
-def set_contract(request, username):
+def tutor_invoice(request):
     """
     Require: GET
 
-    **GET**: renders the contract selection page.
+    **GET**: returns a JSON with the tutor invoice information.
     """
 
-    cr = _controllers.set_contract(request, username)
+    cr = controllers.tutor_invoice(request)
 
-    utilities.place_message(request, cr)
-
-    if cr.should_redirect():
-        return cr.redirect
-
-    return render(request, 'set_contract.html', cr.gets())
+    return cr
 
