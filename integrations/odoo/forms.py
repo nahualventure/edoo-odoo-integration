@@ -13,7 +13,8 @@ class ContractForm(forms.Form):
 
     contract_id = forms.ChoiceField(
         label=_(u"Contrato"),
-        required=True
+        required=True,
+        choices=()
     )
 
     products = CommaSeparatedIntegerField(
@@ -23,7 +24,8 @@ class ContractForm(forms.Form):
 
     payments_responsible = forms.ChoiceField(
         label=_(u"Responsable"),
-        required=True
+        required=True,
+        choices=()
     )
 
     name = forms.CharField(
