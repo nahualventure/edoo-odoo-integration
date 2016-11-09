@@ -51,11 +51,11 @@ class ContractForm(forms.Form):
         widget=forms.Textarea)
     """ Contract address parameter. """
 
-    # tutors_visibility = SemicolonWithCommaSeparatedField(
-    #     label=_(u"Visibilidad"),
-    #     widget=forms.widgets.HiddenInput,
-    #     required=False)
-    # """ Contract address parameter. """
+    tutors_visibility = SemicolonWithCommaSeparatedField(
+        label=_(u"Visibilidad"),
+        widget=forms.widgets.HiddenInput,
+        required=False)
+    """ Contract address parameter. """
 
     def __init__(self, *args, **kwargs):
         if 'contract' in kwargs:
