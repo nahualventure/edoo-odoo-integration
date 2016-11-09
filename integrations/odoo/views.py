@@ -26,7 +26,7 @@ def get_contract(request, username):
         if cr.should_redirect():
             return cr.redirect
 
-        return render(request, 'backends/backends/contract.html', cr.gets())
+        return render(request, 'backends/contract.html', cr.gets())
 
     elif request.method == 'POST':
         print ('entra al post')
