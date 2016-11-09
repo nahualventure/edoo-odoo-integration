@@ -11,7 +11,6 @@ class Odoo:
 
 
 def post_client(data):
-    print (data)
     return requests.post("{0}/{1}".format(Odoo.BASE_URL, Odoo.CLIENTS),
                          data=data)
 

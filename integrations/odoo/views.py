@@ -29,7 +29,6 @@ def get_contract(request, username):
         return render(request, 'backends/contract.html', cr.gets())
 
     elif request.method == 'POST':
-        print ('entra al post')
         cr = controllers.set_contract(request, username, request.POST)
 
         utilities.place_message(request, cr)
