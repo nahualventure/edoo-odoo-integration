@@ -6,15 +6,19 @@ from django.utils.translation import ugettext_lazy as _
 from utils.forms import CommaSeparatedIntegerField, SemicolonWithCommaSeparatedField
 
 
+class ChoiceFieldNoValidation(forms.ChoiceField):
+    def validate(self, value):
+        pass
+
+
 class ContractForm(forms.Form):
     """
     Form used for Teacher Profiles data editing.
     """
 
-    contract_id = forms.ChoiceField(
+    contract_id = ChoiceFieldNoValidation(
         label=_(u"Contrato"),
-        required=True,
-        choices=()
+        required=True
     )
 
     products = CommaSeparatedIntegerField(
@@ -22,10 +26,9 @@ class ContractForm(forms.Form):
         widget=forms.widgets.HiddenInput,
         required=True)
 
-    payments_responsible = forms.ChoiceField(
+    payments_responsible = ChoiceFieldNoValidation(
         label=_(u"Responsable"),
-        required=True,
-        choices=()
+        required=True
     )
 
     name = forms.CharField(
