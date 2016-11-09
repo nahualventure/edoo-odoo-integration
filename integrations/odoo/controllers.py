@@ -122,8 +122,6 @@ def tutor_invoice(request):
 
     success, response = services.call_client(client_id)
 
-    print (response)
-
     return JsonResponse(response)
 
 
@@ -152,7 +150,7 @@ def set_contract(request, username, request_data, redirect_url=None):
         nit = contract_form.cleaned_data.get('nit')
         phone = contract_form.cleaned_data.get('phone')
         address = contract_form.cleaned_data.get('address')
-        tutors_visibility = contract_form.cleaned_data.get('tutors_visibility')
+        # tutors_visibility = contract_form.cleaned_data.get('tutors_visibility')
 
         # Get users
         user = User.objects.get(username=username)
