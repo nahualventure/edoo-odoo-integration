@@ -72,8 +72,7 @@ def get_contract(request, username):
 
         if len(student_tutors) > 0:
             # Get integration object
-            # client_id = get_integration_id(student_tutors[0].user)
-            client_id = '47'
+            client_id = get_integration_id(student_tutors[0].user)
             success, client_info = services.call_client(client_id)
 
             for hash_key, tag in [
@@ -121,8 +120,6 @@ def tutor_invoice(request):
     user = User.objects.get(username=username)
     client_id = get_integration_id(user)
 
-
-    client_id = "48"
     success, response = services.call_client(client_id)
 
     print (response)
@@ -162,8 +159,8 @@ def set_contract(request, username, request_data, redirect_url=None):
         tutor = User.objects.get(username=payments_responsible)
 
         # Get integration object
-        # client_id = get_integration_id(user)
-        # tutor_client_id = get_integration_id(tutor)
+        client_id = get_integration_id(user)
+        tutor_client_id = get_integration_id(tutor)
 
         contract_data = {
             'contract_id': contract_id,
@@ -178,15 +175,12 @@ def set_contract(request, username, request_data, redirect_url=None):
         }
 
         client_data = {
-            # 'super_client_id': tutor_client_id
+            'super_client_id': tutor_client_id
         }
-
-        client_id = '49'
-        tutor_client_id = '50'
 
         u_success, u_response = services.set_contract(client_id, contract_data)
 
-        # t_success, t_response = services.update_client(client_id, client_data)
+        t_success, t_response = services.update_client(client_id, client_data)
 
         c_success, c_response = services.update_client(tutor_client_id, tutor_client_data)
 
