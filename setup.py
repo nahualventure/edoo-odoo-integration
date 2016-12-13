@@ -1,3 +1,4 @@
+# coding=utf-8
 """A setuptools based setup module.
 See:
 https://packaging.python.org/en/latest/distributing.html
@@ -16,20 +17,22 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as readme_file:
     long_description = readme_file.read()
 
+exec(open('integrations/version.py').read())
+
 setup(
-    name='academic-integrations',
+    name='web-integrations',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.1',
+    version=__version__,
 
-    description='Un sistema de integraciones para edoo académico.'
+    description='Un sistema de integraciones para edoo web.'
                 '\n- Extensión de odoo (sistema contable)',
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/oscaresgil/academic-integrations',
+    url='https://github.com/nahualventures',
 
     # Author details
     author='Oscar Gil',
