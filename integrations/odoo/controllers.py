@@ -51,10 +51,51 @@ def get_contract(request, username):
     # Build response
     response = ControllerResponse(request, _(u"Mensaje de respuesta por defecto"))
 
-    success, contracts_data = services.call_contracts()
+    # success, contracts_data = services.call_contracts()
 
     try:
-        contracts = contracts_data['results']
+        # contracts = contracts_data['results']
+
+        contracts_data = '[' \
+                        '{' \
+                            '"id": 123' \
+                            '"name": Contract 1' \
+                            '"products: [' \
+                                '{' \
+                                    '"id": 1,' \
+                                    '"name": "Colegiatura",' \
+                                    '"date": "12/05/2016"' \
+                                    '"amount: 25.12"' \
+                                '},' \
+                                '{' \
+                                    '"id": 2,' \
+                                    '"name": "Colegiatura",' \
+                                    '"date": "12/05/2016"' \
+                                    '"amount: 250.12"' \
+                                '},' \
+                            '],' \
+                        '},' \
+                        '{' \
+                            '"id": 456' \
+                            '"name": Contract 2' \
+                            '"products: [' \
+                                '{' \
+                                    '"id": 1,' \
+                                    '"name": "Colegiatura extra",' \
+                                    '"date": "12/05/2016"' \
+                                    '"amount: 125.12"' \
+                                '},' \
+                                '{' \
+                                    '"id": 2,' \
+                                    '"name": "Colegiatura ex",' \
+                                    '"date": "12/05/2016"' \
+                                    '"amount: 28.12"' \
+                                '},' \
+                            '],' \
+                        '},' \
+                    ']'
+
+        contracts = json.loads(contracts_data)
 
         # Random default contract
         default_contract = contracts.keys()[0]
@@ -157,8 +198,8 @@ def set_contract(request, username, request_data, redirect_url=None):
         tutor = User.objects.get(username=payments_responsible)
 
         # Get integration object
-        client_id = get_integration_id(user)
-        tutor_client_id = get_integration_id(tutor)
+        # client_id = get_integration_id(user)
+        # tutor_client_id = get_integration_id(tutor)
 
         contract_data = {
             'contract_id': contract_id,
@@ -173,14 +214,14 @@ def set_contract(request, username, request_data, redirect_url=None):
         }
 
         client_data = {
-            'super_client_id': tutor_client_id
+            # 'super_client_id': tutor_client_id
         }
 
-        u_success, u_response = services.set_contract(client_id, contract_data)
-
-        t_success, t_response = services.update_client(client_id, client_data)
-
-        c_success, c_response = services.update_client(tutor_client_id, tutor_client_data)
+        # u_success, u_response = services.set_contract(client_id, contract_data)
+        #
+        # t_success, t_response = services.update_client(client_id, client_data)
+        #
+        # c_success, c_response = services.update_client(tutor_client_id, tutor_client_data)
 
         redirect_response = HttpResponseRedirect(reverse('registration_backend'))
 
