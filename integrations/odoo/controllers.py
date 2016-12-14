@@ -171,7 +171,7 @@ def tutor_invoice(request):
     response = {
         'invoice_name': user.get_full_name(),
         'invoice_identifier': "1234",
-        'invoice_phone': user.phone,
+        'invoice_phone': "24839800",
         'invoice_address': user.address
     }
 
