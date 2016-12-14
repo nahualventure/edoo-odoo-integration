@@ -109,20 +109,24 @@ def get_contract(request, username):
                 products = val['products']
 
         contract_initial = {
-            'contract_id': default_contract
+            'contract_id': default_contract,
+            'name': "Alejandro Perez",
+            'nit': "3556435-4",
+            'phone': "24364321",
+            'address': "10 ave. 6-15 zona 10\nGuatemala"
         }
 
         if len(student_tutors) > 0:
             # Get integration object
-            client_id = get_integration_id(student_tutors[0].user)
-            success, client_info = services.call_client(client_id)
+            # client_id = get_integration_id(student_tutors[0].user)
+            # success, client_info = services.call_client(client_id)
 
-            for hash_key, tag in [
-                    ('name', 'invoice_name'),
-                    ('nit', 'invoice_identifier'),
-                    ('phone', 'invoice_phone'),
-                    ('address', 'invoice_address')]:
-                contract_initial[hash_key] = client_info[tag] if tag in client_info else ''
+            # for hash_key, tag in [
+            #         ('name', 'invoice_name'),
+            #         ('nit', 'invoice_identifier'),
+            #         ('phone', 'invoice_phone'),
+            #         ('address', 'invoice_address')]:
+            #     contract_initial[hash_key] = client_info[tag] if tag in client_info else ''
 
         contract_form = ContractForm(
             initial=contract_initial,
@@ -160,9 +164,16 @@ def tutor_invoice(request):
     username = request.GET.get('username', None)
 
     user = User.objects.get(username=username)
-    client_id = get_integration_id(user)
+    # client_id = get_integration_id(user)
 
-    success, response = services.call_client(client_id)
+    # success, response = services.call_client(client_id)
+
+    response = {
+        'invoice_name': user.get_full_name(),
+        'invoice_identifier': "1234",
+        'invoice_phone': user.phone,
+        'invoice_address': user.address
+    }
 
     return JsonResponse(response)
 
