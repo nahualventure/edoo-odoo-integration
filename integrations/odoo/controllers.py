@@ -56,10 +56,11 @@ def get_contract(request, username):
     try:
         # contracts = contracts_data['results']
 
-        contracts_data = '[' \
-                '{' \
-                    '"id": 123,' \
+        contracts_data = \
+            '{' \
+                '"123": {' \
                     '"name": "Contrato 1",' \
+                    '"default": True,' \
                     '"products": [' \
                         '{' \
                             '"id": 1,' \
@@ -75,9 +76,9 @@ def get_contract(request, username):
                         '}' \
                     ']' \
                 '},' \
-                '{' \
-                    '"id": 456,' \
+                '"456": {' \
                     '"name": "Contrato 2",' \
+                    '"default": False,' \
                     '"products": [' \
                         '{' \
                             '"id": 1,' \
@@ -93,7 +94,7 @@ def get_contract(request, username):
                         '}' \
                     ']' \
                 '}' \
-            ']'
+            '}'
 
         contracts = json.loads(contracts_data)
 
