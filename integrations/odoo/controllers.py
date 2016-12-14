@@ -116,7 +116,7 @@ def get_contract(request, username):
             'address': "10 ave. 6-15 zona 10\nGuatemala"
         }
 
-        if len(student_tutors) > 0:
+        # if len(student_tutors) > 0:
             # Get integration object
             # client_id = get_integration_id(student_tutors[0].user)
             # success, client_info = services.call_client(client_id)
