@@ -72,8 +72,8 @@ def get_contract(request, username):
                             '"name": "Extracurricular",' \
                             '"date": "12/05/2016",' \
                             '"amount": 250.50' \
-                        '},' \
-                    '],' \
+                        '}' \
+                    ']' \
                 '},' \
                 '{' \
                     '"id": 456,' \
@@ -90,9 +90,9 @@ def get_contract(request, username):
                             '"name": "Asignatura extra",' \
                             '"date": "12/05/2016",' \
                             '"amount": 450.00' \
-                        '},' \
-                    '],' \
-                '},' \
+                        '}' \
+                    ']' \
+                '}' \
             ']'
 
         contracts = json.loads(contracts_data)
