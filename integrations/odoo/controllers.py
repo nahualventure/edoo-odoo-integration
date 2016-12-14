@@ -60,7 +60,7 @@ def get_contract(request, username):
             '{' \
                 '"123": {' \
                     '"name": "Contrato 1",' \
-                    '"default": True,' \
+                    '"default": true,' \
                     '"products": [' \
                         '{' \
                             '"id": 1,' \
@@ -78,7 +78,7 @@ def get_contract(request, username):
                 '},' \
                 '"456": {' \
                     '"name": "Contrato 2",' \
-                    '"default": False,' \
+                    '"default": false,' \
                     '"products": [' \
                         '{' \
                             '"id": 1,' \
