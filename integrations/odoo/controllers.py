@@ -57,43 +57,43 @@ def get_contract(request, username):
         # contracts = contracts_data['results']
 
         contracts_data = '[' \
+                '{' \
+                    '"id": 123,' \
+                    '"name": "Contrato 1",' \
+                    '"products": [' \
                         '{' \
-                            '"id": 123' \
-                            '"name": Contract 1' \
-                            '"products: [' \
-                                '{' \
-                                    '"id": 1,' \
-                                    '"name": "Colegiatura",' \
-                                    '"date": "12/05/2016"' \
-                                    '"amount: 25.12"' \
-                                '},' \
-                                '{' \
-                                    '"id": 2,' \
-                                    '"name": "Colegiatura",' \
-                                    '"date": "12/05/2016"' \
-                                    '"amount: 250.12"' \
-                                '},' \
-                            '],' \
+                            '"id": 1,' \
+                            '"name": "Colegiatura",' \
+                            '"date": "12/05/2016",' \
+                            '"amount": 1225.00' \
                         '},' \
                         '{' \
-                            '"id": 456' \
-                            '"name": Contract 2' \
-                            '"products: [' \
-                                '{' \
-                                    '"id": 1,' \
-                                    '"name": "Colegiatura extra",' \
-                                    '"date": "12/05/2016"' \
-                                    '"amount: 125.12"' \
-                                '},' \
-                                '{' \
-                                    '"id": 2,' \
-                                    '"name": "Colegiatura ex",' \
-                                    '"date": "12/05/2016"' \
-                                    '"amount: 28.12"' \
-                                '},' \
-                            '],' \
+                            '"id": 2,' \
+                            '"name": "Extracurricular",' \
+                            '"date": "12/05/2016",' \
+                            '"amount": 250.50' \
                         '},' \
-                    ']'
+                    '],' \
+                '},' \
+                '{' \
+                    '"id": 456,' \
+                    '"name": "Contrato 2",' \
+                    '"products": [' \
+                        '{' \
+                            '"id": 1,' \
+                            '"name": "Colegiatura extra",' \
+                            '"date": "12/05/2016",' \
+                            '"amount": 2125.00' \
+                        '},' \
+                        '{' \
+                            '"id": 2,' \
+                            '"name": "Asignatura extra",' \
+                            '"date": "12/05/2016",' \
+                            '"amount": 450.00' \
+                        '},' \
+                    '],' \
+                '},' \
+            ']'
 
         contracts = json.loads(contracts_data)
 
