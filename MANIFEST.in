@@ -2,8 +2,8 @@
 include LICENSE.txt
 
 # Include the data files
-recursive-include integrations *
-recursive-include integrations/odoo/templates *
+recursive-include odoo *
+recursive-include odoo/templates *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 

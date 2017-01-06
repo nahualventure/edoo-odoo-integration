@@ -17,10 +17,10 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as readme_file:
     long_description = readme_file.read()
 
-exec(open('integrations/version.py').read())
+exec(open('odoo/version.py').read())
 
 setup(
-    name='web-integrations',
+    name='edoo-odoo-integration',
 
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
@@ -62,7 +62,7 @@ setup(
     ],
 
     # What does your project relate to?
-    keywords='integrations edoo edoo-integrations academic-integrations',
+    keywords='odoo edoo integration',
 
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
