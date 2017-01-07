@@ -1,9 +1,10 @@
 import requests
+from django.config import settings
 
 
 class Odoo:
     # main URL of API
-    BASE_URL = "http://10.13.21.102:8080/odooapi/odoo"
+    BASE_URL = settings.ODOO_SETTINGS['BASE_URL']
     CONTRACTS = "contracts"
     CLIENTS = "clients"
     DISCOUNTS = "discounts"
