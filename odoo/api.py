@@ -1,5 +1,5 @@
 import requests
-from django.config import settings
+from django.conf import settings
 
 
 class Odoo:
