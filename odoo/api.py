@@ -4,7 +4,10 @@ from django.conf import settings
 
 class Odoo:
     # main URL of API
-    BASE_URL = settings.ODOO_SETTINGS['BASE_URL']
+    BASE_URL = 'http://localhost:8069'
+    if hasattr(settings, 'ODOO_SETTINGS'):
+        BASE_URL = settings.ODOO_SETTINGS['BASE_URL']
+
     CONTRACTS = "contracts"
     CLIENTS = "clients"
     DISCOUNTS = "discounts"
