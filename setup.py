@@ -27,8 +27,7 @@ setup(
     # https://packaging.python.org/en/latest/single_source_version.html
     version=__version__,
 
-    description='Un sistema de integraciones para edoo web.'
-                '\n- Extensión de odoo (sistema contable)',
+    description='Integración con Odoo. Un software de contabilidad para edoo web.',
     long_description=long_description,
 
     # The project's main homepage.

@@ -14,8 +14,7 @@ from userprofiles.models import (
 
 from utils.controllers import ControllerResponse
 from utils import services as utilities
-
-from integrations.models import get_integration_id
+from integrations.services import get_integration_id
 
 import services
 from forms import ContractForm

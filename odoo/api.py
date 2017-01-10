@@ -46,9 +46,9 @@ def set_discount(client_id, data):
                                                  client_id, Odoo.DISCOUNTS), data=data)
 
 
-def get_account_statement(client_id):
+def get_account_statement(client_id, data):
     return requests.get("{0}/{1}/{2}/{3}".format(Odoo.BASE_URL, Odoo.CLIENTS,
-                                                 client_id, Odoo.ACCOUNT_STATEMENT))
+                                                 client_id, Odoo.ACCOUNT_STATEMENT), data=data)
 
 
 def test_request():
