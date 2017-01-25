@@ -19,18 +19,6 @@ from integrations.services import get_integration_id
 import services
 from forms import ContractForm
 
-"""
-Business logic for the odoo module integration
-"""
-
-__version__ = '0.1.0'
-__author__ = 'Oscar Gil <info@edoo.io>'
-__date__ = '23 September 2016'
-__copyright__ = 'Copyright (c) 2012-2016 Samuel Chávez'
-__license__ = 'THE LICENSE'
-__status__ = 'development'
-__docformat__ = 'reStructuredText'
-
 User = get_user_model()
 
 
@@ -46,9 +34,6 @@ def get_contract(request, username):
     student_tutors = [relationship.tutor
                       for relationship
                       in StudentTutorRelationship.objects.filter(student_profile=student_profile)]
-
-    # Build response
-    response = ControllerResponse(request, _(u"Mensaje de respuesta por defecto"))
 
     success, contracts_data = services.call_contracts()
 
@@ -87,6 +72,8 @@ def get_contract(request, username):
             parents=((tutor.user.username, tutor.user.formal_name) for tutor in student_tutors)
         )
 
+        response = ControllerResponse(request, _(u"Mensaje de respuesta por defecto"))
+
         response.sets({
             'user': user,
             'student_profile': student_profile,
@@ -101,6 +88,8 @@ def get_contract(request, username):
         contract_form = ContractForm(
             parents=((tutor.user.username, tutor.user.formal_name) for tutor in student_tutors)
         )
+
+        response = ControllerResponse(request, _(u"Problemas de conexión hacia Odoo"))
 
         response.sets({
             'user': user,

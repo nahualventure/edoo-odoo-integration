@@ -1,5 +1,6 @@
 import requests
 import api
+from django.conf import settings
 
 
 def create_client(data):
