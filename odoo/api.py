@@ -4,7 +4,7 @@ from django.conf import settings
 
 class Odoo:
     # main URL of API
-    BASE_URL = 'http://localhost:8069/'
+    BASE_URL = 'odoo.edoo.io'
     if hasattr(settings, 'ODOO_SETTINGS'):
         BASE_URL = settings.ODOO_SETTINGS['BASE_URL']
 
@@ -30,8 +30,9 @@ def post_client(data):
 
 
 def get_client(client_id):
-    return requests.get("{0}{1}/{2}".format(Odoo.BASE_URL, Odoo.CLIENTS, client_id),
-                        data=STATIC_DATA)
+    url = "{0}{1}/{2}".format(Odoo.BASE_URL, Odoo.CLIENTS, client_id)
+    print 'GET: <' + url + '>'
+    return requests.get(url, data=STATIC_DATA)
 
 
 def put_client(client_id, data):
