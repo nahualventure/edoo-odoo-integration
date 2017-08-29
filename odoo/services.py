@@ -51,7 +51,8 @@ def call_discounts():
 def call_account_statement(client_id, data):
     try:
         response = api.get_account_statement(client_id, data)
-        return response.status_code == requests.codes.ok, response.json()
+
+        return response
     except requests.RequestException:
         print ("Error en el request")
         return False, {}
