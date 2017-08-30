@@ -63,27 +63,38 @@ def get_account_statement(client_id, filters):
 
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
-    clietAccountMoves = models.execute_kw(db, uid, password,
+    cliet_account_moves = models.execute_kw(db, uid, password,
         'account.move.line', 'search_read',
         [[
             ['partner_id', '=', client_id],
             ['reconciled', '=', False],
-            # '|',
-            # ['account_id.type', '=', 'receivable'],
-            # ['account_id.type', '=', 'liquidity'],
         ]],
-        {
-            'limit': 10
-        }
     )
 
-    accountState = []
+    account_ids = []
+    for record in cliet_account_moves:
+        account_ids.append(record['account_id'][0])
 
-    for record in clietAccountMoves:
+    accounts_filtered = models.execute_kw(db, uid, password,
+        'account.account', 'search',
+        [[
+            ['id', 'in', account_ids],
+            '|',
+            ['internal_type', '=', 'receivable'],
+            ['internal_type', '=', 'liquidity'],
+        ]]
+    )
+
+    account_state = []
+
+    for record in cliet_account_moves:
+        if (record['account_id'][0] not in accounts_filtered):
+            continue
+
         move = {
             "id": record['id'],
-            "date": str(record['date']),
-            "name": str(record['name']),
+            "date": record['date'],
+            "name": record['name'],
             "description": "Descripcion pendiente de definir!",
             "reference": "Referencia pendiente de definir!",
         }
@@ -97,6 +108,6 @@ def get_account_statement(client_id, filters):
         if (credit > 0):
             move["amount"] = credit
 
-        accountState.append(move)
+        account_state.append(move)
 
-    return accountState
+    return account_state
