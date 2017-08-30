@@ -75,6 +75,8 @@ def get_account_statement(client_id, filters):
     for record in cliet_account_moves:
         account_ids.append(record['account_id'][0])
 
+    account_ids = list(set(account_ids))
+
     accounts_filtered = models.execute_kw(db, uid, password,
         'account.account', 'search',
         [[
