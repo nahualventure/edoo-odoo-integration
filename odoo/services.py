@@ -1,6 +1,7 @@
 import requests
 import api
 from django.conf import settings
+import xmlrpclib
 
 
 def create_client(data):
@@ -74,3 +75,12 @@ def set_discount(client_id, data):
     except requests.RequestException:
         print ("Error en el request")
         return False, {}
+
+
+def authenticate_user(host, database, username, password):
+    try:
+        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(host))
+
+        return common.authenticate(database, username, password, {})
+    except Exception as e:
+        raise e

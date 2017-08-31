@@ -4,6 +4,7 @@ import xmlrpclib
 import time
 import services
 
+
 if not hasattr(settings, 'ODOO_SETTINGS'):
     raise Exception('No settings found for Odoo.')
 
@@ -54,13 +55,19 @@ def set_discount(client_id, data):
     return requests.put("{0}{1}/{2}/{3}".format(Odoo.BASE_URL, Odoo.CLIENTS, client_id, Odoo.DISCOUNTS),
                         data=data.update(CONTEXT))
 
+def get_odoo_settings():
+    return [
+        Odoo.CONTEXT['host'],
+        Odoo.CONTEXT['db'],
+        Odoo.CONTEXT['username'],
+        Odoo.CONTEXT['password']
+    ]
+
 
 def get_account_statement(client_id, filters):
-    url, db, username, password = \
-    Odoo.CONTEXT['host'], Odoo.CONTEXT['db'], Odoo.CONTEXT['username'], Odoo.CONTEXT['password']
+    url, db, username, password = get_odoo_settings()
 
-    common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(url))
-    uid = common.authenticate(db, username, password, {})
+    uid = services.authenticate_user(url, db, username, password)
 
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
@@ -108,21 +115,14 @@ def get_account_statement(client_id, filters):
             continue
 
         move = {
-            "id": record['id'],
-            "date": record['date'],
-            "name": record['name'],
-            "description": "Descripcion pendiente de definir!",
-            "reference": "Referencia pendiente de definir!",
+            'id': record['id'],
+            'date': record['date'],
+            'name': record['name'],
+            'debit': record['debit'],
+            'credit': record['credit'],
+            'description': 'Descripcion pendiente de definir!',
+            'reference': 'Referencia pendiente de definir!',
         }
-
-        debit = record['debit']
-        credit = record['credit']
-
-        if (debit > 0):
-            move["amount"] = debit
-
-        if (credit > 0):
-            move["amount"] = credit
 
         account_state.append(move)
 
