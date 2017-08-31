@@ -1,6 +1,7 @@
 import requests
 from django.conf import settings
 import xmlrpclib
+import time
 import services
 
 if not hasattr(settings, 'ODOO_SETTINGS'):
@@ -63,19 +64,32 @@ def get_account_statement(client_id, filters):
 
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
+    query_filters = [
+        ['partner_id', '=', client_id],
+        ['reconciled', '=', False],
+    ]
+
+    if ('date_start' in filters):
+        # Throw error if date_start does not match format '%Y-%m-%d'
+        time.strptime(filters['date_start'], '%Y-%m-%d')
+
+        query_filters.append(['date', '>=', filters['date_start']],)
+
+    if ('date_end' in filters):
+        # Throw error if date_end does not match format '%Y-%m-%d'
+        time.strptime(filters['date_end'], '%Y-%m-%d')
+
+        query_filters.append(['date', '<=', filters['date_end']],)
+
     cliet_account_moves = models.execute_kw(db, uid, password,
         'account.move.line', 'search_read',
-        [[
-            ['partner_id', '=', client_id],
-            ['reconciled', '=', False],
-        ]],
+        [query_filters],
     )
 
-    account_ids = []
-    for record in cliet_account_moves:
-        account_ids.append(record['account_id'][0])
-
-    account_ids = list(set(account_ids))
+    account_ids = list(set(map(
+        lambda record: record['account_id'][0],
+        cliet_account_moves
+    )))
 
     accounts_filtered = models.execute_kw(db, uid, password,
         'account.account', 'search',
