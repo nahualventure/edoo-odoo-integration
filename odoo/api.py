@@ -91,6 +91,7 @@ def get_account_statement(client_id, filters):
     cliet_account_moves = models.execute_kw(db, uid, password,
         'account.move.line', 'search_read',
         [query_filters],
+        {'order': 'company_id'}
     )
 
     account_ids = list(set(map(
@@ -108,11 +109,26 @@ def get_account_statement(client_id, filters):
         ]]
     )
 
+    account_state_all = []
     account_state = []
+    prev_company_id = null
+    prev_company_name = null
 
     for record in cliet_account_moves:
         if (record['account_id'][0] not in accounts_filtered):
             continue
+
+        company_id = record['company_id'][0]
+        company_name = record['company_id'][1]
+
+        if (prev_company_id and prev_company_id != company_id):
+            account_state_all.append({
+                'company_id': prev_company_id,
+                'compnay_name': prev_company_name,
+                'transactions': account_state
+            })
+
+            account_state = []
 
         move = {
             'id': record['id'],
@@ -125,5 +141,13 @@ def get_account_statement(client_id, filters):
         }
 
         account_state.append(move)
+        prev_company_id = company_id
+        prev_company_name = company_name
 
-    return account_state
+    account_state_all.append({
+        'company_id': prev_company_id,
+        'compnay_name': prev_company_name,
+        'transactions': account_state
+    })
+
+    return account_state_all
