@@ -73,7 +73,6 @@ def get_account_statement(client_id, filters):
 
     query_filters = [
         ['partner_id', '=', client_id],
-        ['reconciled', '=', False],
     ]
 
     if ('date_start' in filters):
@@ -91,7 +90,7 @@ def get_account_statement(client_id, filters):
     cliet_account_moves = models.execute_kw(db, uid, password,
         'account.move.line', 'search_read',
         [query_filters],
-        {'order': 'company_id'}
+        {'order': 'company_id, date'}
     )
 
     account_ids = list(set(map(
@@ -111,8 +110,8 @@ def get_account_statement(client_id, filters):
 
     account_state_all = []
     account_state = []
-    prev_company_id = null
-    prev_company_name = null
+    prev_company_id = None
+    prev_company_name = None
 
     for record in cliet_account_moves:
         if (record['account_id'][0] not in accounts_filtered):
@@ -134,8 +133,7 @@ def get_account_statement(client_id, filters):
             'id': record['id'],
             'date': record['date'],
             'name': record['name'],
-            'debit': record['debit'],
-            'credit': record['credit'],
+            'balance': record['balance'],
             'description': 'Descripcion pendiente de definir!',
             'reference': 'Referencia pendiente de definir!',
         }
@@ -146,7 +144,7 @@ def get_account_statement(client_id, filters):
 
     account_state_all.append({
         'company_id': prev_company_id,
-        'compnay_name': prev_company_name,
+        'company_name': prev_company_name,
         'transactions': account_state
     })
 
