@@ -132,6 +132,7 @@ def get_account_statement(client_id, filters):
         move = {
             'id': record['id'],
             'date': record['date'],
+            'date_maturity': record['date_maturity'],
             'name': record['name'],
             'balance': record['balance'],
             'description': 'Descripcion pendiente de definir!',
