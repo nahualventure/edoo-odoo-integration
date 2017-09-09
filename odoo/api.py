@@ -29,8 +29,21 @@ def post_client(data):
 
 
 def get_client(client_id):
-    url = "{0}{1}/{2}".format(Odoo.BASE_URL, Odoo.CLIENTS, client_id)
-    return requests.get(url, data=CONTEXT)
+    url, db, username, password = get_odoo_settings()
+
+    uid = services.authenticate_user(url, db, username, password)
+
+    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+
+    client = models.execute_kw(db, uid, password,
+        'res.partner', 'search_read',
+        [[['id', '=', client_id]]]
+    )
+
+    if not len(client):
+        return None
+
+    return client[0]
 
 
 def put_client(client_id, data):
@@ -87,7 +100,7 @@ def get_account_statement(client_id, filters):
 
         query_filters.append(['date', '<=', filters['date_end']],)
 
-    cliet_account_moves = models.execute_kw(db, uid, password,
+    client_account_moves = models.execute_kw(db, uid, password,
         'account.move.line', 'search_read',
         [query_filters],
         {'order': 'company_id, date'}
@@ -95,7 +108,7 @@ def get_account_statement(client_id, filters):
 
     account_ids = list(set(map(
         lambda record: record['account_id'][0],
-        cliet_account_moves
+        client_account_moves
     )))
 
     accounts_filtered = models.execute_kw(db, uid, password,
@@ -113,7 +126,7 @@ def get_account_statement(client_id, filters):
     prev_company_id = None
     prev_company_name = None
 
-    for record in cliet_account_moves:
+    for record in client_account_moves:
         if (record['account_id'][0] not in accounts_filtered):
             continue
 
@@ -133,7 +146,7 @@ def get_account_statement(client_id, filters):
             'id': record['id'],
             'date': record['date'],
             'date_maturity': record['date_maturity'],
-            'name': record['name'],
+            'name': record['move_id'][1],
             'balance': record['balance'],
             'description': 'Descripcion pendiente de definir!',
             'reference': 'Referencia pendiente de definir!',

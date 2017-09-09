@@ -16,10 +16,11 @@ def create_client(data):
 def call_client(client_id):
     try:
         response = api.get_client(client_id)
-        return response.status_code == requests.codes.ok, response.json()
+
+        return response
     except requests.RequestException:
         print ("Error en el request")
-        return False, {}
+        return None
 
 
 def update_client(client_id, data):
@@ -56,7 +57,7 @@ def call_account_statement(client_id, data):
         return response
     except requests.RequestException:
         print ("Error en el request")
-        return False, {}
+        return None
 
 
 def set_contract(client_id, data):
