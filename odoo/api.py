@@ -3,6 +3,7 @@ from django.conf import settings
 import xmlrpclib
 import time
 import services
+import json
 
 
 if not hasattr(settings, 'ODOO_SETTINGS'):
@@ -100,38 +101,80 @@ def get_account_statement(client_id, filters):
 
         query_filters.append(['date', '<=', filters['date_end']],)
 
-    client_account_moves = models.execute_kw(db, uid, password,
-        'account.move.line', 'search_read',
+    # client_account_moves = models.execute_kw(db, uid, password,
+    #     'account.move.line', 'search_read',
+    #     [query_filters],
+    #     {'order': 'company_id, date'}
+    # )
+
+    # account_ids = list(set(map(
+    #     lambda record: record['account_id'][0],
+    #     client_account_moves
+    # )))
+
+    # accounts_filtered = models.execute_kw(db, uid, password,
+    #     'account.account', 'search',
+    #     [[
+    #         ['id', 'in', account_ids],
+    #         '|',
+    #         ['internal_type', '=', 'receivable'],
+    #         ['internal_type', '=', 'liquidity'],
+    #     ]]
+    # )
+
+    account_invoices = models.execute_kw(db, uid, password,
+        'account.invoice', 'search_read',
         [query_filters],
-        {'order': 'company_id, date'}
+        {'order': 'company_id, date_invoice'}
     )
 
-    account_ids = list(set(map(
-        lambda record: record['account_id'][0],
-        client_account_moves
-    )))
+    account_invoice_line_ids = []
 
-    accounts_filtered = models.execute_kw(db, uid, password,
-        'account.account', 'search',
-        [[
-            ['id', 'in', account_ids],
-            '|',
-            ['internal_type', '=', 'receivable'],
-            ['internal_type', '=', 'liquidity'],
-        ]]
+    result = []
+
+    for account_invoice in account_invoices:
+        transaction  = {
+            'id': account_invoice['id'],
+            'number': account_invoice['number'],
+            'date_invoice': account_invoice['date_invoice'],
+            'date_due': account_invoice['date_due'],
+            'amount_total': account_invoice['amount_total'],
+            'invoice_line_ids': account_invoice['invoice_line_ids'],
+            'company_id': account_invoice['company_id'][0],
+            'company_name': account_invoice['company_id'][1],
+            'reconciled': account_invoice['reconciled']
+        }
+
+        account_invoice_line_ids.extend(account_invoice['invoice_line_ids'])
+
+        result.append(transaction)
+
+    account_invoice_lines = models.execute_kw(db, uid, password,
+        'account.invoice.line', 'search_read',
+        [[['id', 'in', account_invoice_line_ids]]]
     )
+
+    invoice_line_descriptions = {}
+    for account_invoice_line in account_invoice_lines:
+        invoice_line_descriptions[account_invoice_line['id']] = account_invoice_line['display_name']
+
+    for transaction in result:
+        transaction['invoice_lines'] = map(
+            lambda x: {'id': x, 'display_name': invoice_line_descriptions[x] },
+            transaction['invoice_line_ids']
+        )
 
     account_state_all = []
     account_state = []
     prev_company_id = None
     prev_company_name = None
 
-    for record in client_account_moves:
-        if (record['account_id'][0] not in accounts_filtered):
-            continue
+    for record in result:
+        # if (record['account_id'][0] not in accounts_filtered):
+        #     continue
 
-        company_id = record['company_id'][0]
-        company_name = record['company_id'][1]
+        company_id = record['company_id']
+        company_name = record['company_name']
 
         if (prev_company_id and prev_company_id != company_id):
             account_state_all.append({
@@ -144,10 +187,10 @@ def get_account_statement(client_id, filters):
 
         move = {
             'id': record['id'],
-            'date': record['date'],
-            'date_maturity': record['date_maturity'],
-            'name': record['move_id'][1],
-            'balance': record['balance'],
+            'date': record['date_invoice'],
+            'date_maturity': record['date_due'],
+            'name': record['number'],
+            'balance': record['amount_total'],
             'reconciled': record['reconciled'],
         }
 
