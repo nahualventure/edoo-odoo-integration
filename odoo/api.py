@@ -103,27 +103,7 @@ def get_account_statement(client_id, filters):
 
         query_filters.append(['date', '<=', filters['date_end']],)
 
-    # client_account_moves = models.execute_kw(db, uid, password,
-    #     'account.move.line', 'search_read',
-    #     [query_filters],
-    #     {'order': 'company_id, date'}
-    # )
-
-    # account_ids = list(set(map(
-    #     lambda record: record['account_id'][0],
-    #     client_account_moves
-    # )))
-
-    # accounts_filtered = models.execute_kw(db, uid, password,
-    #     'account.account', 'search',
-    #     [[
-    #         ['id', 'in', account_ids],
-    #         '|',
-    #         ['internal_type', '=', 'receivable'],
-    #         ['internal_type', '=', 'liquidity'],
-    #     ]]
-    # )
-
+    # Get client invoices.
     account_invoices = models.execute_kw(db, uid, password,
         'account.invoice', 'search_read',
         [query_filters],
@@ -137,6 +117,7 @@ def get_account_statement(client_id, filters):
     prev_company_id = None
     prev_company_name = None
 
+    # Get the information that interests us, grouping by company.
     for account_invoice in account_invoices:
         company_id = account_invoice['company_id'][0]
         company_name = account_invoice['company_id'][1]
@@ -172,6 +153,7 @@ def get_account_statement(client_id, filters):
         'invoices': company_invoices
     })
 
+    # Get the details of the invoices to get the descriptions.
     account_invoice_lines = models.execute_kw(db, uid, password,
         'account.invoice.line', 'search_read',
         [[['id', 'in', account_invoice_line_ids]]]
@@ -181,12 +163,15 @@ def get_account_statement(client_id, filters):
     for account_invoice_line in account_invoice_lines:
         invoice_line_descriptions[account_invoice_line['id']] = account_invoice_line['display_name']
 
+    # Include descriptions.
     for company_data in invoices_by_company:
         for invoice in company_data['invoices']:
             invoice['invoice_lines'] = map(
                 lambda x: {'id': x, 'display_name': invoice_line_descriptions[x] },
                 invoice['invoice_line_ids']
             )
+
+            # This key will no longer serve us.
             invoice.pop('invoice_line_ids')
 
     return invoices_by_company
