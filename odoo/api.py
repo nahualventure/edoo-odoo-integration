@@ -148,8 +148,7 @@ def get_account_statement(client_id, filters):
             'date_maturity': record['date_maturity'],
             'name': record['move_id'][1],
             'balance': record['balance'],
-            'description': 'Descripcion pendiente de definir!',
-            'reference': 'Referencia pendiente de definir!',
+            'reconciled': record['reconciled'],
         }
 
         account_state.append(move)
