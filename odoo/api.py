@@ -132,24 +132,45 @@ def get_account_statement(client_id, filters):
 
     account_invoice_line_ids = []
 
-    result = []
+    invoices_by_company = []
+    company_invoices = []
+    prev_company_id = None
+    prev_company_name = None
 
     for account_invoice in account_invoices:
-        transaction  = {
+        company_id = account_invoice['company_id'][0]
+        company_name = account_invoice['company_id'][1]
+
+        if (prev_company_id and prev_company_id != company_id):
+            invoices_by_company.append({
+                'company_id': prev_company_id,
+                'company_name': prev_company_name,
+                'invoices': company_invoices
+            })
+
+            company_invoices = []
+
+        invoice  = {
             'id': account_invoice['id'],
             'number': account_invoice['number'],
             'date_invoice': account_invoice['date_invoice'],
             'date_due': account_invoice['date_due'],
             'amount_total': account_invoice['amount_total'],
             'invoice_line_ids': account_invoice['invoice_line_ids'],
-            'company_id': account_invoice['company_id'][0],
-            'company_name': account_invoice['company_id'][1],
             'reconciled': account_invoice['reconciled']
         }
 
         account_invoice_line_ids.extend(account_invoice['invoice_line_ids'])
 
-        result.append(transaction)
+        company_invoices.append(invoice)
+        prev_company_id = company_id
+        prev_company_name = company_name
+
+    invoices_by_company.append({
+        'company_id': prev_company_id,
+        'company_name': prev_company_name,
+        'invoices': company_invoices
+    })
 
     account_invoice_lines = models.execute_kw(db, uid, password,
         'account.invoice.line', 'search_read',
@@ -160,50 +181,12 @@ def get_account_statement(client_id, filters):
     for account_invoice_line in account_invoice_lines:
         invoice_line_descriptions[account_invoice_line['id']] = account_invoice_line['display_name']
 
-    for transaction in result:
-        transaction['invoice_lines'] = map(
-            lambda x: {'id': x, 'display_name': invoice_line_descriptions[x] },
-            transaction['invoice_line_ids']
-        )
+    for company_data in invoices_by_company:
+        for invoice in company_data['invoices']:
+            invoice['invoice_lines'] = map(
+                lambda x: {'id': x, 'display_name': invoice_line_descriptions[x] },
+                invoice['invoice_line_ids']
+            )
+            invoice.pop('invoice_line_ids')
 
-    account_state_all = []
-    account_state = []
-    prev_company_id = None
-    prev_company_name = None
-
-    for record in result:
-        # if (record['account_id'][0] not in accounts_filtered):
-        #     continue
-
-        company_id = record['company_id']
-        company_name = record['company_name']
-
-        if (prev_company_id and prev_company_id != company_id):
-            account_state_all.append({
-                'company_id': prev_company_id,
-                'compnay_name': prev_company_name,
-                'transactions': account_state
-            })
-
-            account_state = []
-
-        move = {
-            'id': record['id'],
-            'date': record['date_invoice'],
-            'date_maturity': record['date_due'],
-            'name': record['number'],
-            'balance': record['amount_total'],
-            'reconciled': record['reconciled'],
-        }
-
-        account_state.append(move)
-        prev_company_id = company_id
-        prev_company_name = company_name
-
-    account_state_all.append({
-        'company_id': prev_company_id,
-        'company_name': prev_company_name,
-        'transactions': account_state
-    })
-
-    return account_state_all
+    return invoices_by_company
