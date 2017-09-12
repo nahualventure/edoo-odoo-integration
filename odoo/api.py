@@ -174,6 +174,7 @@ def get_account_statement(client_id, filters):
             # This key will no longer serve us.
             invoice.pop('invoice_line_ids')
 
+    # Get client payments.
     account_payments = models.execute_kw(db, uid, password,
         'account.payment', 'search_read',
         [[['partner_id', '=', client_id]]],
@@ -184,6 +185,7 @@ def get_account_statement(client_id, filters):
     prev_company_id = None
     prev_company_name = None
 
+    # Get the information that interests us, grouping by company.
     for account_payment in account_payments:
         company_id = account_payment['company_id'][0]
         company_name = account_payment['company_id'][1]
@@ -207,6 +209,7 @@ def get_account_statement(client_id, filters):
         prev_company_id = company_id
         prev_company_name = company_name
 
+    # Add payment info to the respective company.
     for company_data in invoices_by_company:
         if (company_data['company_id'] == company_id):
             company_data['payments'] = company_payments
