@@ -86,7 +86,9 @@ def get_account_statement(client_id, filters):
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     query_filters = [
+        '|',
         ['partner_id', '=', client_id],
+        ['commercial_partner_id', '=', client_id],
     ]
 
     if ('date_start' in filters):
