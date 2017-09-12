@@ -174,4 +174,42 @@ def get_account_statement(client_id, filters):
             # This key will no longer serve us.
             invoice.pop('invoice_line_ids')
 
+    account_payments = models.execute_kw(db, uid, password,
+        'account.payment', 'search_read',
+        [[['partner_id', '=', client_id]]],
+        {'order': 'company_id, payment_date'}
+    )
+
+    company_payments = [];
+    prev_company_id = None
+    prev_company_name = None
+
+    for account_payment in account_payments:
+        company_id = account_payment['company_id'][0]
+        company_name = account_payment['company_id'][1]
+
+        if (prev_company_id and prev_company_id != company_id):
+            for company_data in invoices_by_company:
+                if (company_data['company_id'] == company_id):
+                    company_data['payments'] = company_payments
+                    break
+
+            company_payments = []
+
+        payment = {
+            'id': account_payment['id'],
+            'display_name': account_payment['display_name'],
+            'payment_date': account_payment['payment_date'],
+            'amount': account_payment['amount']
+        }
+
+        company_payments.append(payment)
+        prev_company_id = company_id
+        prev_company_name = company_name
+
+    for company_data in invoices_by_company:
+        if (company_data['company_id'] == company_id):
+            company_data['payments'] = company_payments
+            break
+
     return invoices_by_company
