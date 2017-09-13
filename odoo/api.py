@@ -159,15 +159,22 @@ def get_account_statement(client_id, filters):
         [[['id', 'in', account_invoice_line_ids]]]
     )
 
-    invoice_line_descriptions = {}
+    invoice_line_indexed = {}
     for account_invoice_line in account_invoice_lines:
-        invoice_line_descriptions[account_invoice_line['id']] = account_invoice_line['display_name']
+        invoice_line_indexed[account_invoice_line['id']] = {
+            'display_name': account_invoice_line['display_name'],
+            'price_subtotal': account_invoice_line['price_subtotal'],
+        }
 
     # Include descriptions.
     for company_data in invoices_by_company:
         for invoice in company_data['invoices']:
             invoice['invoice_lines'] = map(
-                lambda x: {'id': x, 'display_name': invoice_line_descriptions[x] },
+                lambda x: {
+                    'id': x,
+                    'display_name': invoice_line_indexed[x]['display_name'],
+                    'price_subtotal': invoice_line_indexed[x]['price_subtotal'],
+                },
                 invoice['invoice_line_ids']
             )
 
