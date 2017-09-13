@@ -112,7 +112,7 @@ def get_account_statement(client_id, filters):
 
     account_invoice_line_ids = []
 
-    invoices_by_company = []
+    transactions_by_company = []
     company_invoices = []
     prev_company_id = None
     prev_company_name = None
@@ -123,7 +123,7 @@ def get_account_statement(client_id, filters):
         company_name = account_invoice['company_id'][1]
 
         if (prev_company_id and prev_company_id != company_id):
-            invoices_by_company.append({
+            transactions_by_company.append({
                 'company_id': prev_company_id,
                 'company_name': prev_company_name,
                 'invoices': company_invoices
@@ -147,7 +147,7 @@ def get_account_statement(client_id, filters):
         prev_company_id = company_id
         prev_company_name = company_name
 
-    invoices_by_company.append({
+    transactions_by_company.append({
         'company_id': prev_company_id,
         'company_name': prev_company_name,
         'invoices': company_invoices
@@ -167,7 +167,7 @@ def get_account_statement(client_id, filters):
         }
 
     # Include descriptions.
-    for company_data in invoices_by_company:
+    for company_data in transactions_by_company:
         for invoice in company_data['invoices']:
             invoice['invoice_lines'] = map(
                 lambda x: {
@@ -198,7 +198,8 @@ def get_account_statement(client_id, filters):
         company_name = account_payment['company_id'][1]
 
         if (prev_company_id and prev_company_id != company_id):
-            for company_data in invoices_by_company:
+            # Add payment info to the respective company.
+            for company_data in transactions_by_company:
                 if (company_data['company_id'] == company_id):
                     company_data['payments'] = company_payments
                     break
@@ -218,9 +219,9 @@ def get_account_statement(client_id, filters):
         prev_company_name = company_name
 
     # Add payment info to the respective company.
-    for company_data in invoices_by_company:
+    for company_data in transactions_by_company:
         if (company_data['company_id'] == company_id):
             company_data['payments'] = company_payments
             break
 
-    return invoices_by_company
+    return transactions_by_company
