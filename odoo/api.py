@@ -138,7 +138,8 @@ def get_account_statement(client_id, filters):
             'date_due': account_invoice['date_due'],
             'amount_total': account_invoice['amount_total'],
             'invoice_line_ids': account_invoice['invoice_line_ids'],
-            'reconciled': account_invoice['reconciled']
+            'reconciled': account_invoice['reconciled'],
+            'journal_id': account_invoice['journal_id']
         }
 
         account_invoice_line_ids.extend(account_invoice['invoice_line_ids'])
@@ -211,7 +212,8 @@ def get_account_statement(client_id, filters):
             'display_name': account_payment['display_name'],
             'payment_date': account_payment['payment_date'],
             'amount': account_payment['amount'],
-            'state': account_payment['state']
+            'state': account_payment['state'],
+            'journal_id': account_payment['journal_id']
         }
 
         company_payments.append(payment)
