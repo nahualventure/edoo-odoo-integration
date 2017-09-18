@@ -7,10 +7,11 @@ import xmlrpclib
 def create_client(data):
     try:
         response = api.post_client(data)
-        return response.status_code == requests.codes.ok, response.json()
+
+        return response
     except requests.RequestException:
         print ("Error en el request")
-        return False, {}
+        return None
 
 
 def call_client(client_id):

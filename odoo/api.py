@@ -25,8 +25,23 @@ class Odoo:
 
 
 def post_client(data):
-    return requests.post("{0}{1}".format(Odoo.BASE_URL, Odoo.CLIENTS),
-                         data=data.update(CONTEXT))
+    url, db, username, password = get_odoo_settings()
+
+    uid = services.authenticate_user(url, db, username, password)
+
+    odoo_client_id = models.execute_kw(db, uid, password,
+        'res.partner', 'create',
+        [{
+            'name': data['name'],
+        }]
+    )
+
+    odoo_client = models.execute_kw(db, uid, password,
+        'res.partner', 'search_read',
+        [[['id', '=', odoo_client_id]]]
+    )
+
+    return odoo_client[0]
 
 
 def get_client(client_id):
