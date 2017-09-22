@@ -163,11 +163,14 @@ def get_account_statement(client_id, filters):
         prev_company_id = company_id
         prev_company_name = company_name
 
-    transactions_by_company.append({
-        'company_id': prev_company_id,
-        'company_name': prev_company_name,
-        'invoices': company_invoices
-    })
+    # The algorithm of the previous loop does not add the last company_invoices.
+    # Add it if the loop was entered.
+    if prev_company_id:
+        transactions_by_company.append({
+            'company_id': prev_company_id,
+            'company_name': prev_company_name,
+            'invoices': company_invoices
+        })
 
     # Get the details of the invoices to get the descriptions.
     account_invoice_lines = models.execute_kw(db, uid, password,
@@ -235,10 +238,14 @@ def get_account_statement(client_id, filters):
         prev_company_id = company_id
         prev_company_name = company_name
 
-    # Add payment info to the respective company.
-    for company_data in transactions_by_company:
-        if (company_data['company_id'] == company_id):
-            company_data['payments'] = company_payments
-            break
+    # The algorithm of the previous loop does not add the last company_payments.
+    # Add it if the loop was entered.
+
+    if prev_company_id:
+        # Add payment info to the respective company.
+        for company_data in transactions_by_company:
+            if (company_data['company_id'] == prev_company_id):
+                company_data['payments'] = company_payments
+                break
 
     return transactions_by_company
