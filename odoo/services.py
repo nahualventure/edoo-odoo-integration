@@ -51,9 +51,9 @@ def call_discounts():
         return False, {}
 
 
-def call_account_statement(client_id, data):
+def call_account_statement(client_id, comercial_id, data):
     try:
-        response = api.get_account_statement(client_id, data)
+        response = api.get_account_statement(client_id, comercial_id, data)
 
         return response
     except requests.RequestException:

@@ -92,9 +92,19 @@ def get_odoo_settings():
         Odoo.CONTEXT['password']
     ]
 
+def get_allowed_invoice_journals():
+    return settings.ODOO_SETTINGS['ALLOWED_INVOICE_JOURNALS']
+
+def get_allowed_payment_journals():
+    return settings.ODOO_SETTINGS['ALLOWED_PAYMENT_JOURNALS']
 
 def get_account_statement(client_id, comercial_id, filters):
     url, db, username, password = get_odoo_settings()
+    comercial_id = int(comercial_id)
+    client_id = int(client_id)
+
+    allowed_invoice_journals = get_allowed_invoice_journals()
+    allowed_payment_journals = get_allowed_payment_journals()
 
     uid = services.authenticate_user(url, db, username, password)
 
@@ -104,6 +114,7 @@ def get_account_statement(client_id, comercial_id, filters):
         '|',
         ['partner_id', '=', comercial_id],
         ['commercial_partner_id', '=', comercial_id],
+        ['journal_id', 'in', allowed_invoice_journals]
     ]
 
     if ('date_start' in filters):
@@ -203,7 +214,10 @@ def get_account_statement(client_id, comercial_id, filters):
     # Get client payments.
     account_payments = models.execute_kw(db, uid, password,
         'account.payment', 'search_read',
-        [[['partner_id', '=', client_id]]],
+        [[
+            ['partner_id', '=', client_id],
+            ['journal_id', 'in', allowed_payment_journals]
+        ]],
         {'order': 'company_id, payment_date'}
     )
 
