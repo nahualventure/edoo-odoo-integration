@@ -93,7 +93,7 @@ def get_odoo_settings():
     ]
 
 
-def get_account_statement(client_id, filters):
+def get_account_statement(client_id, comercial_id, filters):
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
@@ -102,8 +102,8 @@ def get_account_statement(client_id, filters):
 
     query_filters = [
         '|',
-        ['partner_id', '=', client_id],
-        ['commercial_partner_id', '=', client_id],
+        ['partner_id', '=', comercial_id],
+        ['commercial_partner_id', '=', comercial_id],
     ]
 
     if ('date_start' in filters):
