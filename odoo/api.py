@@ -121,13 +121,19 @@ def get_account_statement(client_id, comercial_id, filters):
         # Throw error if date_start does not match format '%Y-%m-%d'
         time.strptime(filters['date_start'], '%Y-%m-%d')
 
-        query_filters.append(['date', '>=', filters['date_start']],)
+        query_filters.append(['date', '>=', filters['date_start']])
 
     if ('date_end' in filters):
         # Throw error if date_end does not match format '%Y-%m-%d'
         time.strptime(filters['date_end'], '%Y-%m-%d')
 
-        query_filters.append(['date', '<=', filters['date_end']],)
+        query_filters.append(['date', '<=', filters['date_end']])
+
+    """
+    --------------------------------------------
+    Invoices
+    --------------------------------------------
+    """
 
     # Get client invoices.
     account_invoices = models.execute_kw(db, uid, password,
@@ -152,7 +158,9 @@ def get_account_statement(client_id, comercial_id, filters):
             transactions_by_company.append({
                 'company_id': prev_company_id,
                 'company_name': prev_company_name,
-                'invoices': company_invoices
+                'invoices': company_invoices,
+                'payments': [],
+                'balance': 0
             })
 
             company_invoices = []
@@ -180,7 +188,9 @@ def get_account_statement(client_id, comercial_id, filters):
         transactions_by_company.append({
             'company_id': prev_company_id,
             'company_name': prev_company_name,
-            'invoices': company_invoices
+            'invoices': company_invoices,
+            'payments': [],
+            'balance': 0
         })
 
     # Get the details of the invoices to get the descriptions.
@@ -211,13 +221,34 @@ def get_account_statement(client_id, comercial_id, filters):
             # This key will no longer serve us.
             invoice.pop('invoice_line_ids')
 
+    query_filters = [
+        ['partner_id', '=', client_id],
+        ['journal_id', 'in', allowed_payment_journals]
+    ]
+
+    if ('date_start' in filters):
+        # Throw error if date_start does not match format '%Y-%m-%d'
+        time.strptime(filters['date_start'], '%Y-%m-%d')
+
+        query_filters.append(['payment_date', '>=', filters['date_start']])
+
+    if ('date_end' in filters):
+        # Throw error if date_end does not match format '%Y-%m-%d'
+        time.strptime(filters['date_end'], '%Y-%m-%d')
+
+        query_filters.append(['payment_date', '<=', filters['date_end']])
+
+
+    """
+    --------------------------------------------
+    Payments
+    --------------------------------------------
+    """
+
     # Get client payments.
     account_payments = models.execute_kw(db, uid, password,
         'account.payment', 'search_read',
-        [[
-            ['partner_id', '=', client_id],
-            ['journal_id', 'in', allowed_payment_journals]
-        ]],
+        [query_filters],
         {'order': 'company_id, payment_date'}
     )
 
@@ -261,5 +292,54 @@ def get_account_statement(client_id, comercial_id, filters):
             if (company_data['company_id'] == prev_company_id):
                 company_data['payments'] = company_payments
                 break
+
+    """
+    --------------------------------------------
+    Balance calc for each company
+    --------------------------------------------
+    """
+
+    account_acount_ids = models.execute_kw(db, uid, password,
+        'account.account', 'search',
+        [[['internal_type', '=', 'receivable']]]
+    )
+
+    # Get invoice lines.
+    account_move_lines = models.execute_kw(db, uid, password,
+        'account.move.line', 'search_read',
+        [[
+            ['partner_id', '=', client_id],
+            ['date', '<', filters['date_start']],
+            ['account_id', 'in', account_acount_ids]
+        ]],
+        {'order': 'company_id'}
+    )
+
+    prev_company_id = None
+    current_balance = 0
+
+    for account_move_line in account_move_lines:
+        company_id = account_move_line['company_id'][0]
+
+        if (prev_company_id and prev_company_id != company_id):
+            # Add balance to the respective company.
+            for company_data in transactions_by_company:
+                if (company_data['company_id'] == company_id):
+                    company_data['balance'] = current_balance
+                    break
+
+            current_balance = 0
+
+        current_balance += account_move_line['balance']
+        prev_company_id = company_id
+
+
+    if prev_company_id:
+        # Add balance to the respective company.
+        for company_data in transactions_by_company:
+            if (company_data['company_id'] == prev_company_id):
+                company_data['balance'] = current_balance
+                break
+
 
     return transactions_by_company
