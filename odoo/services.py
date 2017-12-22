@@ -86,3 +86,12 @@ def authenticate_user(host, database, username, password):
         return common.authenticate(database, username, password, {})
     except Exception as e:
         raise e
+
+def search_clients(query):
+    try:
+        response = api.search_clients(query)
+
+        return response
+    except requests.RequestException:
+        print ("Error en el request")
+        return None

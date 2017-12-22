@@ -10,30 +10,23 @@ from utils import services as utilities
 
 @csrf_protect
 @require_http_methods(['GET', 'POST'])
-def get_contract(request, username):
+def registration(request, student_id):
     """
     Require: GET, POST
 
     **GET**: renders the contract selection page.
     **POST**: process the form submission.
     """
-
-    if request.method == 'GET':
-        cr = controllers.get_contract(request, username)
-
+    if request.method == 'POST':
+        cr = controllers.register_student(request, request.POST, student_id)
         utilities.place_message(request, cr)
 
         if cr.should_redirect():
             return cr.redirect
+    elif request.method == 'GET':
+        cr = controllers.registration(request, student_id)
 
-        return render(request, 'backends/contract.html', cr.gets())
-
-    elif request.method == 'POST':
-        cr = controllers.set_contract(request, username, request.POST)
-
-        utilities.place_message(request, cr)
-
-        return cr.redirect
+    return render(request, 'odoo/registration.html', cr.gets())
 
 
 @csrf_protect
@@ -49,3 +42,9 @@ def tutor_invoice(request):
 
     return cr
 
+
+@csrf_protect
+@require_http_methods(['GET'])
+def search_clients(request):
+    query = request.GET.get('query', "")
+    return controllers.search_clients(request, query)

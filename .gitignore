@@ -98,3 +98,7 @@ views.py
 urls.py
 api.py
 forms.py
+
+# OS specific
+.DS_Store
+.thumbs

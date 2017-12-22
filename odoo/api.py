@@ -61,6 +61,40 @@ def get_client(client_id):
 
     return client[0]
 
+import time
+
+def search_clients(query):
+    url, db, username, password = get_odoo_settings()
+
+    # TODO: xmlshit
+    # uid = services.authenticate_user(url, db, username, password)
+    # 
+    # TODO: transform into the following shape
+
+    return [
+        {
+            'display_as': 'user',
+            'client_id': 1,
+            'comercial_id': 1,
+            'comercial_name': "Cliente S. A.",
+            'comercial_number': "111111111111111111111-1",
+            'comercial_address': "Ciudad 1",
+            'profile_picture': "http://lh3.googleusercontent.com/-zhYZ2MAkVfQ/AAAAAAAAAAI/AAAAAAAAAAA/RDrrSIIg9Jw/photo.jpg",
+            'first_name': "Cliente S. A.",
+            'role': "Cliente registrado"
+        },
+        {
+            'display_as': 'user',
+            'client_id': 2,
+            'billing_id': 2,
+            'billing_name': "Cliente 2 S. A.",
+            'billing_number': "2222222222222222222222-2",
+            'billing_address': "Ciudad 2",
+            'profile_picture': "https://i.pinimg.com/736x/4a/84/7c/4a847c6438c10238461a47a45edbeb0c--redhead-funny-redhead-men.jpg",
+            'first_name': "Cliente 2 S. A.",
+            'role': "Cliente registrado"
+        }
+    ]
 
 def put_client(client_id, data):
     return requests.put("{0}{1}/{2}".format(Odoo.BASE_URL, Odoo.CLIENTS, client_id),
@@ -68,7 +102,7 @@ def put_client(client_id, data):
 
 
 def get_contracts():
-    return requests.get("{0}{1}".format(Odoo.BASE_URL, Odoo.CONTRACTS), data=CONTEXT)
+    return requests.get("{0}{1}".format(Odoo.CONTEXT.get('HOST', ''), Odoo.CONTRACTS))
 
 
 def set_contract(client_id, data):

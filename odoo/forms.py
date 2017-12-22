@@ -4,11 +4,33 @@ from django import forms
 from django.utils.translation import ugettext_lazy as _
 
 from utils.forms import CommaSeparatedIntegerField, SemicolonWithCommaSeparatedField
+from userprofiles.models import TutorProfile
 
 
 class ChoiceFieldNoValidation(forms.ChoiceField):
     def validate(self, value):
         pass
+
+
+class TutorPermissionsForm(forms.Form):
+    tutor = forms.ModelChoiceField(
+        queryset=TutorProfile.objects.all(),
+        required=True, empty_label=None,
+        widget=forms.HiddenInput)
+
+    allow_view_account_statement = forms.BooleanField(required=False)
+    allow_view_voucher = forms.BooleanField(required=False)
+
+
+TutorPermissionsFormset = forms.formset_factory(TutorPermissionsForm, extra=0)
+
+
+class PaymentResponsableConfigurationForm(forms.Form):
+    client_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
+    comercial_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
+    comercial_name = forms.CharField(required=True, label=_(u"ie. Juan López"))
+    comercial_number = forms.CharField(required=True, label=_(u"ie. 11111111-1"))
+    comercial_address = forms.CharField(required=True, label=_(u"ie. Ciudad"))
 
 
 class ContractForm(forms.Form):
