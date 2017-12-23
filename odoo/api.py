@@ -399,6 +399,7 @@ def register_client(
     payment_responsable_comercial_id = 6
 
     return (
+        client_id,
         payment_responsable_client_id,
         payment_responsable_comercial_id
     )
