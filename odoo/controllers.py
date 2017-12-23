@@ -130,6 +130,7 @@ def register_student(request, request_data, student_id, edition=False):
 
         # Register client service consumption
         (
+            client_id,
             payment_responsable_client_id,
             payment_responsable_comercial_id
         ) = services.register_client(

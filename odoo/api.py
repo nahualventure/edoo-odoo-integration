@@ -394,6 +394,7 @@ def register_client(
     # 
     # TODO: transform into the following shape
 
+    client_id = client_id if client_id else 1
     payment_responsable_client_id = 5
     payment_responsable_comercial_id = 6
 
