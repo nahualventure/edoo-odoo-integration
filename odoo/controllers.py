@@ -22,7 +22,10 @@ from forms import (
     TutorPermissionsFormset,
     PaymentResponsableConfigurationForm
 )
-from integrations.services import set_integration_configuration
+from integrations.services import (
+    set_integration_configuration,
+    get_integration_configuration
+)
 
 from userprofiles.models import StudentProfile
 
@@ -50,27 +53,60 @@ def registration(request, student_id):
 
     response = ControllerResponse(request, _(u"Mensaje de respuesta por defecto"))
 
+    # Initial data
+    client_id = get_integration_configuration(
+        integration_key='odoo',
+        object_instance=student_profile,
+        key='client_id',
+        default=False
+    )
+
     payment_configuration_form = PaymentResponsableConfigurationForm()
+    res_data = None
+    if client_id != False:
+        res_data = services.get_payment_responsable_data(client_id)
+        payment_configuration_form = PaymentResponsableConfigurationForm(initial={
+            'client_id': res_data['client_id'],
+            'comercial_id': res_data['comercial_id'],
+            'comercial_name': res_data['comercial_name'],
+            'comercial_number': res_data['comercial_number'],
+            'comercial_address': res_data['comercial_address']
+        })
+
     permissions_formset = TutorPermissionsFormset(initial=[
         {
-            'tutor': tutor,
-            'allow_view_account_statement': True,
-            'allow_view_voucher': False
+            'tutor': relationaship.tutor,
+            'allow_view_account_statement': get_integration_configuration(
+                integration_key='odoo',
+                object_instance=relationship,
+                key='allow_view_account_statement',
+                default=True
+            ),
+            'allow_view_voucher': get_integration_configuration(
+                integration_key='odoo',
+                object_instance=relationship,
+                key='allow_view_voucher',
+                default=True
+            )
         }
-        for tutor in student_tutors
+        for relationaship in relationships
     ], )
 
     response.sets({
         'student_profile': student_profile,
         'student_tutors': student_tutors,
         'payment_configuration_form': payment_configuration_form,
-        'permissions_formset': permissions_formset
+        'permissions_formset': permissions_formset,
+        'prefilled_result': res_data,
+        'studentprofile': student_profile,
+        'user': student_profile.user,
+        'current_view': 'odoo'
     })
 
     return response
 
 
-def register_student(request, request_data, student_id):
+def register_student(request, request_data, student_id, edition=False):
     # Get the student profile
     student_profile = StudentProfile.objects.get(id=student_id)
 
@@ -86,13 +122,26 @@ def register_student(request, request_data, student_id):
     if payment_configuration_form.is_valid() and permissions_formset.is_valid():
 
         # Billing data
-        comercial_id = payment_configuration_form.cleaned_data.get('comercial_id')
+        comercial_id = payment_configuration_form.cleaned_data.get('comercial_id', None)
         comercial_address = payment_configuration_form.cleaned_data.get('comercial_address')
         comercial_number = payment_configuration_form.cleaned_data.get('comercial_number')
-        client_id = payment_configuration_form.cleaned_data.get('client_id')
+        client_id = payment_configuration_form.cleaned_data.get('client_id', None)
         comercial_name = payment_configuration_form.cleaned_data.get('comercial_name')
 
-        # TODO: xmlshit ----------------------------------------------------------------------
+        # Register client service consumption
+        (
+            payment_responsable_client_id,
+            payment_responsable_comercial_id
+        ) = services.register_client(
+            student_profile,
+            student_tutors,
+            client_id,
+            comercial_id,
+            comercial_address,
+            comercial_number,
+            comercial_name
+        )
+
         set_integration_configuration(
             integration_key='odoo',
             object_instance=student_profile,
@@ -104,16 +153,15 @@ def register_student(request, request_data, student_id):
             integration_key='odoo',
             object_instance=student_profile,
             key='payment_responsable_client_id',
-            value='{}'.format('payment_responsable_client_id')
+            value='{}'.format(payment_responsable_client_id)
         )
 
         set_integration_configuration(
             integration_key='odoo',
             object_instance=student_profile,
             key='payment_responsable_comercial_id',
-            value='{}'.format('payment_responsable_comercial_id')
+            value='{}'.format(payment_responsable_comercial_id)
         )
-        # TODO: xmlshit ----------------------------------------------------------------------
 
         # Save configuration for each tutor
         for tutor_configuration in permissions_formset.cleaned_data:
@@ -140,7 +188,7 @@ def register_student(request, request_data, student_id):
             request,
             _(u"Cliente registrado exitosamente en Odoo"),
             message_position='default',
-            redirect='registration_backend_register_student'
+            redirect='registration_backend_register_student' if not edition else 'odoo-client-edition'
         )
 
     response.sets({

@@ -30,6 +30,27 @@ def registration(request, student_id):
 
 
 @csrf_protect
+@require_http_methods(['GET', 'POST'])
+def client_edition(request, student_id):
+    """
+    Require: GET, POST
+
+    **GET**: renders the contract selection page.
+    **POST**: process the form submission.
+    """
+    if request.method == 'POST':
+        cr = controllers.register_student(request, request.POST, student_id, edition=True)
+        utilities.place_message(request, cr)
+
+        if cr.should_redirect():
+            return cr.redirect
+    elif request.method == 'GET':
+        cr = controllers.registration(request, student_id)
+
+    return render(request, 'odoo/edition.html', cr.gets())
+
+
+@csrf_protect
 @require_http_methods(['GET'])
 def tutor_invoice(request):
     """

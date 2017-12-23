@@ -10,6 +10,11 @@ urlpatterns = [
         name='odoo-registration'
     ),
     url(
+        r'^(?P<student_id>[\w.@+-]+)/client-edition/$',
+        views.client_edition,
+        name='odoo-client-edition'
+    ),
+    url(
         r'^search/clients/$',
         views.search_clients,
         name='odoo-search-clients'

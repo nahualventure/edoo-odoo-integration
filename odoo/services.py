@@ -89,9 +89,36 @@ def authenticate_user(host, database, username, password):
 
 def search_clients(query):
     try:
-        response = api.search_clients(query)
+        return api.search_clients(query)
+    except requests.RequestException:
+        print ("Error en el request")
+        return None
 
-        return response
+def register_client(
+        student_profile,
+        student_tutors,
+        client_id,
+        comercial_id,
+        comercial_address,
+        comercial_number,
+        comercial_name):
+    try:
+        return api.register_client(
+            student_profile,
+            student_tutors,
+            client_id,
+            comercial_id,
+            comercial_address,
+            comercial_number,
+            comercial_name
+        )
+    except requests.RequestException:
+        print ("Error en el request")
+        return (None, None)
+
+def get_payment_responsable_data(client_id):
+    try:
+        return api.get_payment_responsable_data(client_id)
     except requests.RequestException:
         print ("Error en el request")
         return None

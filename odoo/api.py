@@ -61,40 +61,6 @@ def get_client(client_id):
 
     return client[0]
 
-import time
-
-def search_clients(query):
-    url, db, username, password = get_odoo_settings()
-
-    # TODO: xmlshit
-    # uid = services.authenticate_user(url, db, username, password)
-    # 
-    # TODO: transform into the following shape
-
-    return [
-        {
-            'display_as': 'user',
-            'client_id': 1,
-            'comercial_id': 1,
-            'comercial_name': "Cliente S. A.",
-            'comercial_number': "111111111111111111111-1",
-            'comercial_address': "Ciudad 1",
-            'profile_picture': "http://lh3.googleusercontent.com/-zhYZ2MAkVfQ/AAAAAAAAAAI/AAAAAAAAAAA/RDrrSIIg9Jw/photo.jpg",
-            'first_name': "Cliente S. A.",
-            'role': "Cliente registrado"
-        },
-        {
-            'display_as': 'user',
-            'client_id': 2,
-            'billing_id': 2,
-            'billing_name': "Cliente 2 S. A.",
-            'billing_number': "2222222222222222222222-2",
-            'billing_address': "Ciudad 2",
-            'profile_picture': "https://i.pinimg.com/736x/4a/84/7c/4a847c6438c10238461a47a45edbeb0c--redhead-funny-redhead-men.jpg",
-            'first_name': "Cliente 2 S. A.",
-            'role': "Cliente registrado"
-        }
-    ]
 
 def put_client(client_id, data):
     return requests.put("{0}{1}/{2}".format(Odoo.BASE_URL, Odoo.CLIENTS, client_id),
@@ -377,3 +343,88 @@ def get_account_statement(client_id, comercial_id, filters):
 
 
     return transactions_by_company
+
+
+def search_clients(query):
+    url, db, username, password = get_odoo_settings()
+
+    # TODO: xmlshit
+    # uid = services.authenticate_user(url, db, username, password)
+    # 
+    # TODO: transform into the following shape
+
+    return [
+        {
+            'display_as': 'user',
+            'client_id': 1,
+            'comercial_id': 1,
+            'comercial_name': "Cliente S. A.",
+            'comercial_number': "111111111111111111111-1",
+            'comercial_address': "Ciudad 1",
+            'profile_picture': "http://lh3.googleusercontent.com/-zhYZ2MAkVfQ/AAAAAAAAAAI/AAAAAAAAAAA/RDrrSIIg9Jw/photo.jpg",
+            'first_name': "Cliente S. A.",
+            'role': "Cliente registrado"
+        },
+        {
+            'display_as': 'user',
+            'client_id': 2,
+            'comercial_id': 2,
+            'comercial_name': "Cliente 2 S. A.",
+            'comercial_number': "2222222222222222222222-2",
+            'comercial_address': "Ciudad 2",
+            'profile_picture': "https://i.pinimg.com/736x/4a/84/7c/4a847c6438c10238461a47a45edbeb0c--redhead-funny-redhead-men.jpg",
+            'first_name': "Cliente 2 S. A.",
+            'role': "Cliente registrado"
+        }
+    ]
+
+
+def register_client(
+        student_profile,
+        student_tutors,
+        client_id,
+        comercial_id,
+        comercial_address,
+        comercial_number,
+        comercial_name):
+    url, db, username, password = get_odoo_settings()
+
+    # TODO: xmlshit
+    # uid = services.authenticate_user(url, db, username, password)
+    # 
+    # TODO: transform into the following shape
+
+    payment_responsable_client_id = 5
+    payment_responsable_comercial_id = 6
+
+    return (
+        payment_responsable_client_id,
+        payment_responsable_comercial_id
+    )
+
+
+def get_payment_responsable_data(client_id):
+    url, db, username, password = get_odoo_settings()
+
+    # TODO: xmlshit
+    # uid = services.authenticate_user(url, db, username, password)
+    # 
+    # TODO: transform into the following shape
+
+    payment_responsable_client_id = 5
+    payment_responsable_comercial_id = 6
+    payment_responsable_comercial_name = "JAJAJAJAJA S. A."
+    payment_responsable_comercial_number = "1111111111111xx"
+    payment_responsable_comercial_address = "Ciudadxx"
+
+    return {
+        'display_as': 'user',
+        'client_id': payment_responsable_client_id,
+        'comercial_id': payment_responsable_comercial_id,
+        'comercial_name': payment_responsable_comercial_name,
+        'comercial_number': payment_responsable_comercial_number,
+        'comercial_address': payment_responsable_comercial_address,
+        'profile_picture': "http://lh3.googleusercontent.com/-zhYZ2MAkVfQ/AAAAAAAAAAI/AAAAAAAAAAA/RDrrSIIg9Jw/photo.jpg",
+        'first_name': "Cliente S. A.",
+        'role': "Cliente registrado"
+    }
