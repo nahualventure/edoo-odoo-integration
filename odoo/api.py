@@ -380,6 +380,7 @@ def search_clients(query):
 
 
 def register_client(
+        student_client_id,
         student_profile,
         student_tutors,
         client_id,

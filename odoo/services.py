@@ -95,6 +95,7 @@ def search_clients(query):
         return None
 
 def register_client(
+        student_client_id,
         student_profile,
         student_tutors,
         client_id,
@@ -104,6 +105,7 @@ def register_client(
         comercial_name):
     try:
         return api.register_client(
+            student_client_id
             student_profile,
             student_tutors,
             client_id,

@@ -54,7 +54,7 @@ def registration(request, student_id):
     response = ControllerResponse(request, _(u"Mensaje de respuesta por defecto"))
 
     # Initial data
-    client_id = get_integration_configuration(
+    student_client_id = get_integration_configuration(
         integration_key='odoo',
         object_instance=student_profile,
         key='client_id',
@@ -63,9 +63,10 @@ def registration(request, student_id):
 
     payment_configuration_form = PaymentResponsableConfigurationForm()
     res_data = None
-    if client_id != False:
-        res_data = services.get_payment_responsable_data(client_id)
+    if student_client_id != False:
+        res_data = services.get_payment_responsable_data(student_client_id)
         payment_configuration_form = PaymentResponsableConfigurationForm(initial={
+            'student_client_id': student_client_id,
             'client_id': res_data['client_id'],
             'comercial_id': res_data['comercial_id'],
             'comercial_name': res_data['comercial_name'],
@@ -122,6 +123,7 @@ def register_student(request, request_data, student_id, edition=False):
     if payment_configuration_form.is_valid() and permissions_formset.is_valid():
 
         # Billing data
+        student_client_id = payment_configuration_form.cleaned_data.get('student_client_id', None)
         comercial_id = payment_configuration_form.cleaned_data.get('comercial_id', None)
         comercial_address = payment_configuration_form.cleaned_data.get('comercial_address')
         comercial_number = payment_configuration_form.cleaned_data.get('comercial_number')
@@ -134,6 +136,7 @@ def register_student(request, request_data, student_id, edition=False):
             payment_responsable_client_id,
             payment_responsable_comercial_id
         ) = services.register_client(
+            student_client_id,
             student_profile,
             student_tutors,
             client_id,

@@ -26,6 +26,7 @@ TutorPermissionsFormset = forms.formset_factory(TutorPermissionsForm, extra=0)
 
 
 class PaymentResponsableConfigurationForm(forms.Form):
+    student_client_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
     client_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
     comercial_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
     comercial_name = forms.CharField(required=True, label=_(u"ie. Juan López"))
