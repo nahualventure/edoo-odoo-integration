@@ -348,35 +348,54 @@ def get_account_statement(client_id, comercial_id, filters):
 def search_clients(query):
     url, db, username, password = get_odoo_settings()
 
-    # TODO: xmlshit
-    # uid = services.authenticate_user(url, db, username, password)
-    # 
-    # TODO: transform into the following shape
+    uid = services.authenticate_user(url, db, username, password)
+    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
-    return [
-        {
+    partners = models.execute_kw(db, uid, password,
+        'res.partner', 'search_read',
+        [[['name', 'ilike', query], ['child_ids', '!=', False]]]
+    )
+
+    partner_ids = list(map(lambda x: int(x['id']), partners))
+
+    comercial_partners = models.execute_kw(db, uid, password,
+        'res.partner', 'search_read',
+        [[['parent_id', 'in', partner_ids], ['type', '=', 'invoice']]]
+    )
+
+    result = []
+
+    for partner in partners:
+        print 'Current partner id: ', partner['id']
+        # Look for comercial partner
+
+        # Logic 1
+        cm = next((x for x in comercial_partners if x['parent_id'][0] == partner['id']), None)
+
+        # Logic 2
+        # cm = None
+        # for comercial_partner in comercial_partners:
+        #     if comercial_partner['parent_id'][0] == partner['id']:
+        #         cm = comercial_partner
+        #         break
+
+        addresses = [cm['street'], cm['street2'], cm['city']] if cm else []
+
+        client_object = {
             'display_as': 'user',
-            'client_id': 1,
-            'comercial_id': 1,
-            'comercial_name': "Cliente S. A.",
-            'comercial_number': "111111111111111111111-1",
-            'comercial_address': "Ciudad 1",
-            'profile_picture': "http://lh3.googleusercontent.com/-zhYZ2MAkVfQ/AAAAAAAAAAI/AAAAAAAAAAA/RDrrSIIg9Jw/photo.jpg",
-            'first_name': "Cliente S. A.",
-            'role': "Cliente registrado"
-        },
-        {
-            'display_as': 'user',
-            'client_id': 2,
-            'comercial_id': 2,
-            'comercial_name': "Cliente 2 S. A.",
-            'comercial_number': "2222222222222222222222-2",
-            'comercial_address': "Ciudad 2",
-            'profile_picture': "https://i.pinimg.com/736x/4a/84/7c/4a847c6438c10238461a47a45edbeb0c--redhead-funny-redhead-men.jpg",
-            'first_name': "Cliente 2 S. A.",
+            'client_id': partner['id'],
+            'comercial_id': cm['id'] if cm else None,
+            'comercial_name': cm['name'] if cm else None,
+            'comercial_number': cm['vat'] if cm else None,
+            'comercial_address': " ".join(address for address in addresses if address),
+            'profile_picture': None,
+            'first_name': partner['name'],
             'role': "Cliente registrado"
         }
-    ]
+
+        result.append(client_object)
+
+    return result
 
 
 def register_client(

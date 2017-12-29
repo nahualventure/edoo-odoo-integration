@@ -34,3 +34,6 @@ def set_contract(client_id, data):
 def set_discount(client_id, data):
     return services.set_discount(client_id, data)
 
+
+def search_clients(query):
+    return services.search_clients(query)
