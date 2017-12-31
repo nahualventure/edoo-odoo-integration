@@ -428,16 +428,43 @@ def register_client(
 def get_payment_responsable_data(client_id):
     url, db, username, password = get_odoo_settings()
 
-    # TODO: xmlshit
-    # uid = services.authenticate_user(url, db, username, password)
-    # 
-    # TODO: transform into the following shape
+    uid = services.authenticate_user(url, db, username, password)
+    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
-    payment_responsable_client_id = 5
-    payment_responsable_comercial_id = 6
-    payment_responsable_comercial_name = "JAJAJAJAJA S. A."
-    payment_responsable_comercial_number = "1111111111111xx"
-    payment_responsable_comercial_address = "Ciudadxx"
+    partner = models.execute_kw(db, uid, password,
+        'res.partner', 'search_read',
+        [[['id', '=', client_id]]]
+    )
+
+    if len(partner) != 1:
+        raise Exception('No client found for id ' + client_id)
+
+    partner = partner[0]
+
+    comercial_partners = models.execute_kw(db, uid, password,
+        'res.partner', 'search_read',
+        [[['parent_id', '=', partner['id']], ['type', '=', 'invoice']]]
+    )
+
+    # A client must have one comercial partner
+    if len(comercial_partners) == 0:
+        raise Exception('No comercial partner found for client ' + client_id)
+    elif len(comercial_partners) > 1:
+        raise Exception('More than one comercial partner found for client ' + client_id)
+
+    comercial_partner = comercial_partners[0]
+
+    addresses = [
+        comercial_partner['street'],
+        comercial_partner['street2'],
+        comercial_partner['city']
+    ]
+
+    payment_responsable_client_id = client_id
+    payment_responsable_comercial_id = comercial_partner['id']
+    payment_responsable_comercial_name = comercial_partner['name']
+    payment_responsable_comercial_number = comercial_partner['vat']
+    payment_responsable_comercial_address = " ".join(address for address in addresses if address)
 
     return {
         'display_as': 'user',

@@ -37,3 +37,7 @@ def set_discount(client_id, data):
 
 def search_clients(query):
     return services.search_clients(query)
+
+
+def get_payment_responsable_data(client_id):
+    return services.get_payment_responsable_data(client_id)
