@@ -41,3 +41,24 @@ def search_clients(query):
 
 def get_payment_responsable_data(client_id):
     return services.get_payment_responsable_data(client_id)
+
+
+def register_client(
+        student_client_id,
+        student_profile,
+        student_tutors,
+        client_id,
+        comercial_id,
+        comercial_address,
+        comercial_number,
+        comercial_name):
+    return services.register_client(
+        student_client_id,
+        student_profile,
+        student_tutors,
+        client_id,
+        comercial_id,
+        comercial_address,
+        comercial_number,
+        comercial_name
+    )

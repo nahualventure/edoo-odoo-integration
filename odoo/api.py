@@ -23,6 +23,10 @@ class Odoo:
         'password': settings.ODOO_SETTINGS['PASSWORD']
     }
 
+    CUSTOM_SETTINGS = {
+        'family_code_prefix': settings.ODOO_SETTINGS['FAMILY_CODE_PREFIX']
+    }
+
 
 def post_client(data):
     url, db, username, password = get_odoo_settings()
@@ -84,6 +88,7 @@ def set_discount(client_id, data):
     return requests.put("{0}{1}/{2}/{3}".format(Odoo.BASE_URL, Odoo.CLIENTS, client_id, Odoo.DISCOUNTS),
                         data=data.update(CONTEXT))
 
+
 def get_odoo_settings():
     return [
         Odoo.CONTEXT['host'],
@@ -92,11 +97,14 @@ def get_odoo_settings():
         Odoo.CONTEXT['password']
     ]
 
+
 def get_allowed_invoice_journals():
     return settings.ODOO_SETTINGS['ALLOWED_INVOICE_JOURNALS']
 
+
 def get_allowed_payment_journals():
     return settings.ODOO_SETTINGS['ALLOWED_PAYMENT_JOURNALS']
+
 
 def get_account_statement(client_id, comercial_id, filters):
     url, db, username, password = get_odoo_settings()
@@ -409,14 +417,54 @@ def register_client(
         comercial_name):
     url, db, username, password = get_odoo_settings()
 
-    # TODO: xmlshit
-    # uid = services.authenticate_user(url, db, username, password)
-    # 
-    # TODO: transform into the following shape
+    uid = services.authenticate_user(url, db, username, password)
+    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
-    client_id = client_id if client_id else 1
-    payment_responsable_client_id = 5
-    payment_responsable_comercial_id = 6
+    # Scenario 1: creation
+    if not student_client_id:
+        if client_id or comercial_id:
+            raise Exception('Inconsistent parameters.')
+
+        family_code_prefix = Odoo.CUSTOM_SETTINGS['family_code_prefix']
+
+        # Create family contact
+        family_code = family_code_prefix + student_profile.code
+        tutors_emails = map(lambda x: x.user.email, student_tutors) if student_tutors else []
+
+        family_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
+            'ref': family_code,
+            'name': student_profile.user.last_name,
+            'email': ",".join(tutors_emails)
+        }])
+
+        # Create family comercial contact
+        comercial_code = family_code_prefix + student_profile.code + family_code_prefix
+
+        family_comercial_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
+            'ref': comercial_code,
+            'street': comercial_address,
+            'vat': comercial_number,
+            'name': comercial_name,
+            'email': '',
+            'parent_id': family_id,
+            'type': 'invoice'
+        }])
+
+        # Create student contact
+        student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
+            'ref': student_profile.code,
+            'name': student_profile.user.first_name + ' ' + student_profile.user.last_name,
+            'email': student_profile.user.email,
+            'parent_id': family_id
+        }])
+
+        # Response
+        client_id = student_id
+        payment_responsable_client_id = family_id
+        payment_responsable_comercial_id = family_comercial_id
+
+
+    # TODO: transform into the following shape
 
     return (
         client_id,
