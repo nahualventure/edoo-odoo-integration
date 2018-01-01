@@ -415,31 +415,65 @@ def register_client(
         comercial_address,
         comercial_number,
         comercial_name):
+    """
+    client_id: family id, odoo contact top level
+    student_client_id: student id, odoo contact child level
+    comercial_id: family comercial id, odoo contact child level
+    """
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
-    # Scenario 1: creation
-    if not student_client_id:
-        if client_id or comercial_id:
-            raise Exception('Inconsistent parameters.')
+    # Setup codes
+    family_code_prefix = Odoo.CUSTOM_SETTINGS['family_code_prefix']
+    family_code = family_code_prefix + student_profile.code
+    comercial_code = family_code_prefix + student_profile.code + family_code_prefix
 
-        family_code_prefix = Odoo.CUSTOM_SETTINGS['family_code_prefix']
+    tutors_emails = map(lambda x: x.user.email, student_tutors) if student_tutors else []
+    family_created = False
 
+    # -------- Family contact --------
+
+    if client_id:
+        # Update family contact
+        family_id = client_id
+        models.execute_kw(db, uid, password, 'res.partner', 'write', [
+            [family_id],
+            {
+                'ref': family_code,
+                'name': student_profile.user.last_name,
+                'email': ",".join(tutors_emails)
+            }
+        ])
+    else:
         # Create family contact
-        family_code = family_code_prefix + student_profile.code
-        tutors_emails = map(lambda x: x.user.email, student_tutors) if student_tutors else []
-
+        family_created = True
         family_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': family_code,
             'name': student_profile.user.last_name,
             'email': ",".join(tutors_emails)
         }])
 
-        # Create family comercial contact
-        comercial_code = family_code_prefix + student_profile.code + family_code_prefix
+    # -------- Family comercial contact --------
 
+    if comercial_id:
+        # Update family comercial contact
+        family_comercial_id = comercial_id
+        models.execute_kw(db, uid, password, 'res.partner', 'write', [
+            [family_comercial_id],
+            {
+                'ref': comercial_code,
+                'street': comercial_address,
+                'vat': comercial_number,
+                'name': comercial_name,
+                'email': '',
+                'parent_id': family_id,
+                'type': 'invoice'
+            }
+        ])
+    else:
+        # Create family comercial contact
         family_comercial_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': comercial_code,
             'street': comercial_address,
@@ -450,6 +484,21 @@ def register_client(
             'type': 'invoice'
         }])
 
+    # -------- Student contact --------
+
+    if student_client_id:
+        # Update student contact
+        student_id = student_client_id
+        models.execute_kw(db, uid, password, 'res.partner', 'write', [
+            [student_id],
+            {
+                'ref': student_profile.code,
+                'name': student_profile.user.first_name + ' ' + student_profile.user.last_name,
+                'email': student_profile.user.email,
+                'parent_id': family_id
+            }
+        ])
+    else:
         # Create student contact
         student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': student_profile.code,
@@ -458,13 +507,11 @@ def register_client(
             'parent_id': family_id
         }])
 
-        # Response
-        client_id = student_id
-        payment_responsable_client_id = family_id
-        payment_responsable_comercial_id = family_comercial_id
 
-
-    # TODO: transform into the following shape
+    # Response
+    client_id = student_id
+    payment_responsable_client_id = family_id
+    payment_responsable_comercial_id = family_comercial_id
 
     return (
         client_id,
