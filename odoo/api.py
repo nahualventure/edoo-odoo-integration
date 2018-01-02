@@ -486,23 +486,87 @@ def register_client(
 
     # -------- Student contact --------
 
+    # Reasign family if student_client_id exists
     if student_client_id:
         # Update student contact
         student_id = student_client_id
-        models.execute_kw(db, uid, password, 'res.partner', 'write', [
-            [student_id],
-            {
+        student = models.execute_kw(db, uid, password,
+            'res.partner', 'search_read',
+            [[['id', '=', student_id]]],
+            {'limit': 1}
+        )
+        if len(student) != 1:
+            raise Exception('No client found for id ' + student_id)
+
+        student = student[0]
+        # Check if family has changed for the student
+        if student['parent_id'] != family_id:
+            old_family_id = models.execute_kw(db, uid, password,
+                'res.partner', 'search',
+                [[['id', '=', student['parent_id']]]],
+                {'limit': 1}
+            )
+            old_family_id = old_family_id[0]
+                                       
+            old_comercial_partner_id = models.execute_kw(db, uid, password,
+                'res.partner', 'search',
+                [[['parent_id', '=', old_family_id]]],
+                {'limit': 1}
+            )
+            old_comercial_partner_id = old_comercial_partner_id[0]
+                                                  
+            # If student_id was used, it will have associated invoices
+            invoice_count = models.execute_kw(db, uid, password,
+                'account.invoice', 'search_count',
+                [[['partner_shipping_id', '=', student_id], ['state', 'in', ['open','paid']]]]
+            )
+            # Archive student
+            if invoice_count:
+                models.execute_kw(db, uid, password, 'res.partner', 'write', [
+                    [student_id],
+                    {'active': False}
+                ])
+            # Unlink student
+            else:
+                models.execute_kw(db, uid, password, 'res.partner', 'unlink', [
+                    [student_id]
+                ])
+            account_move_lines_count = models.execute_kw(db, uid, password,
+                'account.move.line', 'search_count',
+                [[['partner_id', '=', old_family_id]]]
+            )
+            # Archive family and comercial partner
+            if account_move_lines_count:
+                models.execute_kw(db, uid, password, 'res.partner', 'write', [
+                    [old_family_id, old_comercial_partner_id],
+                    {'active': False}
+                ])
+            # Unlink family and comercial partner
+            else:
+                models.execute_kw(db, uid, password, 'res.partner', 'unlink', [
+                    [old_family_id, old_comercial_partner_id]
+                ])
+            # Create new student with new family
+            student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
                 'ref': student_profile.code,
-                'name': student_profile.user.first_name + ' ' + student_profile.user.last_name,
+                'name': student_profile.user.first_name,
                 'email': student_profile.user.email,
                 'parent_id': family_id
-            }
-        ])
+            }])
+        else:
+            models.execute_kw(db, uid, password, 'res.partner', 'write', [
+                [student_id],
+                {
+                    'ref': student_profile.code,
+                    'name': student_profile.user.first_name,
+                    'email': student_profile.user.email
+                }
+            ])
+    # Create student contact
     else:
-        # Create student contact
         student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': student_profile.code,
-            'name': student_profile.user.first_name + ' ' + student_profile.user.last_name,
+            'name': student_profile.user.first_name,
             'email': student_profile.user.email,
             'parent_id': family_id
         }])
@@ -528,7 +592,8 @@ def get_payment_responsable_data(client_id):
 
     partner = models.execute_kw(db, uid, password,
         'res.partner', 'search_read',
-        [[['id', '=', client_id]]]
+        [[['id', '=', client_id]]],
+        {'limit': 1}
     )
 
     if len(partner) != 1:
@@ -569,6 +634,6 @@ def get_payment_responsable_data(client_id):
         'comercial_number': payment_responsable_comercial_number,
         'comercial_address': payment_responsable_comercial_address,
         'profile_picture': "http://lh3.googleusercontent.com/-zhYZ2MAkVfQ/AAAAAAAAAAI/AAAAAAAAAAA/RDrrSIIg9Jw/photo.jpg",
-        'first_name': "Cliente S. A.",
+        'first_name': comercial_partner['name'],
         'role': "Cliente registrado"
     }
