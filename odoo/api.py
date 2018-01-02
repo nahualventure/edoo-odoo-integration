@@ -354,6 +354,7 @@ def get_account_statement(client_id, comercial_id, filters):
 
 
 def search_clients(query):
+    print 'Looking for: ', query
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
@@ -394,7 +395,7 @@ def search_clients(query):
             'client_id': partner['id'],
             'comercial_id': cm['id'] if cm else None,
             'comercial_name': cm['name'] if cm else None,
-            'comercial_number': cm['vat'] if cm else None,
+            'comercial_number': cm['vat'] if (cm and cm['vat']) else None,
             'comercial_address': " ".join(address for address in addresses if address),
             'profile_picture': None,
             'first_name': partner['name'],
@@ -415,6 +416,14 @@ def register_client(
         comercial_address,
         comercial_number,
         comercial_name):
+    print 'student_client_id: ', student_client_id
+    print 'student_profile: ', student_profile
+    print 'student_tutors: ', student_tutors
+    print 'client_id: ', client_id
+    print 'comercial_id: ', comercial_id
+    print 'comercial_address: ', comercial_address
+    print 'comercial_number: ', comercial_number
+    print 'comercial_name: ', comercial_name
     """
     client_id: family id, odoo contact top level
     student_client_id: student id, odoo contact child level
@@ -431,34 +440,36 @@ def register_client(
     comercial_code = family_code_prefix + student_profile.code + family_code_prefix
 
     tutors_emails = map(lambda x: x.user.email, student_tutors) if student_tutors else []
-    family_created = False
 
     # -------- Family contact --------
 
+    # Update family contact
     if client_id:
-        # Update family contact
+        print 'Receiving family_id. Proceding to update...'
         family_id = client_id
         models.execute_kw(db, uid, password, 'res.partner', 'write', [
             [family_id],
             {
                 'ref': family_code,
-                'name': student_profile.user.last_name,
                 'email': ",".join(tutors_emails)
             }
         ])
+        print 'Family updated!'
+    # Create family contact
     else:
-        # Create family contact
-        family_created = True
+        print 'No family_id received. Proceding to create one...'
         family_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': family_code,
             'name': student_profile.user.last_name,
             'email': ",".join(tutors_emails)
         }])
+        print 'Family created!'
 
     # -------- Family comercial contact --------
 
+    # Update family comercial contact
     if comercial_id:
-        # Update family comercial contact
+        print 'Receiving comercial_id. Proceding to update...'
         family_comercial_id = comercial_id
         models.execute_kw(db, uid, password, 'res.partner', 'write', [
             [family_comercial_id],
@@ -472,8 +483,10 @@ def register_client(
                 'type': 'invoice'
             }
         ])
+        print 'Comercial updated!'
+    # Create family comercial contact
     else:
-        # Create family comercial contact
+        print 'No comercial_id received. Proceding to create one...'
         family_comercial_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': comercial_code,
             'street': comercial_address,
@@ -483,60 +496,75 @@ def register_client(
             'parent_id': family_id,
             'type': 'invoice'
         }])
+        print 'Comercial created!'
 
     # -------- Student contact --------
 
     # Reasign family if student_client_id exists
     if student_client_id:
-        # Update student contact
+        print 'Receiving student_id. Search student...'
         student_id = student_client_id
         student = models.execute_kw(db, uid, password,
             'res.partner', 'search_read',
             [[['id', '=', student_id]]],
             {'limit': 1}
         )
+        print 'Student found!'
+
         if len(student) != 1:
-            raise Exception('No client found for id ' + student_id)
+            raise Exception('No client found for id ' + str(student_id))
 
         student = student[0]
+
         # Check if family has changed for the student
-        if student['parent_id'] != family_id:
+        if student['parent_id'][0] != family_id:
+            print 'Student parent changed.'
             old_family_id = models.execute_kw(db, uid, password,
                 'res.partner', 'search',
-                [[['id', '=', student['parent_id']]]],
+                [[['id', '=', student['parent_id'][0]]]],
                 {'limit': 1}
             )
             old_family_id = old_family_id[0]
-                                       
+
             old_comercial_partner_id = models.execute_kw(db, uid, password,
                 'res.partner', 'search',
-                [[['parent_id', '=', old_family_id]]],
+                [[['parent_id', '=', old_family_id], ['type', '=', 'invoice']]],
                 {'limit': 1}
             )
+
+            if len(old_comercial_partner_id) != 1:
+                raise Exception('No comercial partner found for client ' + str(old_family_id))
+
             old_comercial_partner_id = old_comercial_partner_id[0]
-                                                  
+
             # If student_id was used, it will have associated invoices
             invoice_count = models.execute_kw(db, uid, password,
                 'account.invoice', 'search_count',
                 [[['partner_shipping_id', '=', student_id], ['state', 'in', ['open','paid']]]]
             )
+
             # Archive student
             if invoice_count:
+                print 'Student have invoices. Proceding to disable...'
                 models.execute_kw(db, uid, password, 'res.partner', 'write', [
                     [student_id],
                     {'active': False}
                 ])
             # Unlink student
             else:
+                print 'Student does not have invoices. Proceding to delete...'
                 models.execute_kw(db, uid, password, 'res.partner', 'unlink', [
                     [student_id]
                 ])
+
             family_students_count = models.execute_kw(db, uid, password,
                 'res.partner', 'search_count',
                 [[['parent_id', '=', old_family_id], ['type', '=', 'contact']]]
             )
+
             # Family doesn't have more students
-            if family_students_count:
+            if not family_students_count:
+                print 'Old family does not have more students.'
                 account_move_lines_count = models.execute_kw(db, uid, password,
                     'account.move.line', 'search_count',
                     [[['partner_id', '=', old_family_id]]]
@@ -544,15 +572,18 @@ def register_client(
 
                 # Archive family and comercial partner
                 if account_move_lines_count:
+                    print 'Old family have moves. Proceding to disable family and comercial partners...'
                     models.execute_kw(db, uid, password, 'res.partner', 'write', [
                         [old_family_id, old_comercial_partner_id],
                         {'active': False}
                     ])
                 # Unlink family and comercial partner
                 else:
+                    print 'Old family does not have moves. Proceding to delete family and comercial partners...'
                     models.execute_kw(db, uid, password, 'res.partner', 'unlink', [
                         [old_family_id, old_comercial_partner_id]
                     ])
+
             # Create new student with new family
             student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
                 'ref': student_profile.code,
@@ -560,7 +591,10 @@ def register_client(
                 'email': student_profile.user.email,
                 'parent_id': family_id
             }])
+            print 'Student created with new family.'
+        # Update student contact
         else:
+            print 'Same parent. Updating student...'
             models.execute_kw(db, uid, password, 'res.partner', 'write', [
                 [student_id],
                 {
@@ -569,14 +603,17 @@ def register_client(
                     'email': student_profile.user.email
                 }
             ])
+            print 'Student updated'
     # Create student contact
     else:
+        print 'No student_id received. Proceding to create one...'
         student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': student_profile.code,
             'name': student_profile.user.first_name,
             'email': student_profile.user.email,
             'parent_id': family_id
         }])
+        print 'Student created!'
 
 
     # Response
@@ -604,7 +641,7 @@ def get_payment_responsable_data(client_id):
     )
 
     if len(partner) != 1:
-        raise Exception('No client found for id ' + client_id)
+        raise Exception('No client found for id ' + str(client_id))
 
     partner = partner[0]
 
@@ -615,9 +652,9 @@ def get_payment_responsable_data(client_id):
 
     # A client must have one comercial partner
     if len(comercial_partners) == 0:
-        raise Exception('No comercial partner found for client ' + client_id)
+        raise Exception('No comercial partner found for client ' + str(client_id))
     elif len(comercial_partners) > 1:
-        raise Exception('More than one comercial partner found for client ' + client_id)
+        raise Exception('More than one comercial partner found for client ' + str(client_id))
 
     comercial_partner = comercial_partners[0]
 
@@ -630,7 +667,7 @@ def get_payment_responsable_data(client_id):
     payment_responsable_client_id = client_id
     payment_responsable_comercial_id = comercial_partner['id']
     payment_responsable_comercial_name = comercial_partner['name']
-    payment_responsable_comercial_number = comercial_partner['vat']
+    payment_responsable_comercial_number = comercial_partner['vat'] or ''
     payment_responsable_comercial_address = " ".join(address for address in addresses if address)
 
     return {

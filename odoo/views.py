@@ -67,5 +67,5 @@ def tutor_invoice(request):
 @csrf_protect
 @require_http_methods(['GET'])
 def search_clients(request):
-    query = request.GET.get('query', "")
+    query = request.GET.get('text', "")
     return controllers.search_clients(request, query)

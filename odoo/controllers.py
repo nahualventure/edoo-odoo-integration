@@ -61,10 +61,17 @@ def registration(request, student_id):
         default=False
     )
 
+    payment_responsable_client_id = get_integration_configuration(
+        integration_key='odoo',
+        object_instance=student_profile,
+        key='payment_responsable_client_id',
+        default=False
+    )
+
     payment_configuration_form = PaymentResponsableConfigurationForm()
     res_data = None
-    if student_client_id != False:
-        res_data = services.get_payment_responsable_data(student_client_id)
+    if payment_responsable_client_id != False:
+        res_data = services.get_payment_responsable_data(payment_responsable_client_id)
         payment_configuration_form = PaymentResponsableConfigurationForm(initial={
             'student_client_id': student_client_id,
             'client_id': res_data['client_id'],
