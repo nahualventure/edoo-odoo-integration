@@ -531,21 +531,28 @@ def register_client(
                 models.execute_kw(db, uid, password, 'res.partner', 'unlink', [
                     [student_id]
                 ])
-            account_move_lines_count = models.execute_kw(db, uid, password,
-                'account.move.line', 'search_count',
-                [[['partner_id', '=', old_family_id]]]
+            family_students_count = models.execute_kw(db, uid, password,
+                'res.partner', 'search_count',
+                [[['parent_id', '=', old_family_id], ['type', '=', 'contact']]]
             )
-            # Archive family and comercial partner
-            if account_move_lines_count:
-                models.execute_kw(db, uid, password, 'res.partner', 'write', [
-                    [old_family_id, old_comercial_partner_id],
-                    {'active': False}
-                ])
-            # Unlink family and comercial partner
-            else:
-                models.execute_kw(db, uid, password, 'res.partner', 'unlink', [
-                    [old_family_id, old_comercial_partner_id]
-                ])
+            # Family doesn't have more students
+            if family_students_count:
+                account_move_lines_count = models.execute_kw(db, uid, password,
+                    'account.move.line', 'search_count',
+                    [[['partner_id', '=', old_family_id]]]
+                )
+
+                # Archive family and comercial partner
+                if account_move_lines_count:
+                    models.execute_kw(db, uid, password, 'res.partner', 'write', [
+                        [old_family_id, old_comercial_partner_id],
+                        {'active': False}
+                    ])
+                # Unlink family and comercial partner
+                else:
+                    models.execute_kw(db, uid, password, 'res.partner', 'unlink', [
+                        [old_family_id, old_comercial_partner_id]
+                    ])
             # Create new student with new family
             student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
                 'ref': student_profile.code,
