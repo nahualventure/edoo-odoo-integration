@@ -355,7 +355,6 @@ def get_account_statement(client_id, comercial_id, filters):
 
 
 def search_clients(query):
-    print 'Looking for: ', query
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
@@ -376,7 +375,6 @@ def search_clients(query):
     result = []
 
     for partner in partners:
-        print 'Current partner id: ', partner['id']
         # Look for comercial partner
 
         # Logic 1
@@ -398,6 +396,7 @@ def search_clients(query):
             'comercial_name': cm['name'] if cm else None,
             'comercial_number': cm['vat'] if (cm and cm['vat']) else None,
             'comercial_address': " ".join(address for address in addresses if address),
+            'comercial_email': cm['email'] if (cm and cm['email']) else None,
             'profile_picture': Odoo.DEFAULT_AVATAR,
             'first_name': partner['name'],
             'role': "Cliente registrado"
@@ -418,15 +417,6 @@ def register_client(
         comercial_number,
         comercial_name,
         comercial_email):
-    print 'student_client_id: ', student_client_id
-    print 'student_profile: ', student_profile.code
-    print 'student_tutors: ', len(student_tutors)
-    print 'client_id: ', client_id
-    print 'comercial_id: ', comercial_id
-    print 'comercial_address: ', comercial_address
-    print 'comercial_number: ', comercial_number
-    print 'comercial_name: ', comercial_name
-    print 'comercial_email: ', comercial_email
     """
     client_id: family id, odoo contact top level
     student_client_id: student id, odoo contact child level
@@ -448,7 +438,6 @@ def register_client(
 
     # Update family contact
     if client_id:
-        print 'Receiving family_id. Proceding to update...'
         family_id = client_id
         models.execute_kw(db, uid, password, 'res.partner', 'write', [
             [family_id],
@@ -456,22 +445,18 @@ def register_client(
                 'email': ",".join(tutors_emails)
             }
         ])
-        print 'Family updated!'
     # Create family contact
     else:
-        print 'No family_id received. Proceding to create one...'
         family_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': family_code,
             'name': student_profile.user.last_name,
             'email': ",".join(tutors_emails)
         }])
-        print 'Family created!'
 
     # -------- Family comercial contact --------
 
     # Update family comercial contact
     if comercial_id:
-        print 'Receiving comercial_id. Proceding to update...'
         family_comercial_id = comercial_id
         models.execute_kw(db, uid, password, 'res.partner', 'write', [
             [family_comercial_id],
@@ -484,10 +469,8 @@ def register_client(
                 'type': 'invoice'
             }
         ])
-        print 'Comercial updated!'
     # Create family comercial contact
     else:
-        print 'No comercial_id received. Proceding to create one...'
         family_comercial_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': comercial_code,
             'street': comercial_address,
@@ -498,27 +481,23 @@ def register_client(
             'type': 'invoice'
         }])
 
-        # Update 'vat' separately because it is not set during creation.
-        # TODO: Fix this issue in Odoo.
-        models.execute_kw(db, uid, password, 'res.partner', 'write', [
-            [family_comercial_id],
-            { 'vat': comercial_number }
-        ])
-
-        print 'Comercial created!'
+    # Update 'vat' separately because it is not set during creation.
+    # TODO: Fix this issue in Odoo.
+    models.execute_kw(db, uid, password, 'res.partner', 'write', [
+        [family_comercial_id],
+        { 'vat': comercial_number }
+    ])
 
     # -------- Student contact --------
 
     # Reasign family if student_client_id exists
     if student_client_id:
-        print 'Receiving student_id. Search student...'
         student_id = student_client_id
         student = models.execute_kw(db, uid, password,
             'res.partner', 'search_read',
             [[['id', '=', student_id]]],
             {'limit': 1}
         )
-        print 'Student found!'
 
         if len(student) != 1:
             raise Exception('No client found for id ' + str(student_id))
@@ -527,13 +506,13 @@ def register_client(
 
         # Check if family has changed for the student
         if student['parent_id'][0] != family_id:
-            print 'Student parent changed.'
             # Get family partner because we need its current 'ref'.
             old_family = models.execute_kw(db, uid, password,
                 'res.partner', 'search_read',
                 [[['id', '=', student['parent_id'][0]]]],
                 {'limit': 1, 'fields': ['ref']}
             )
+            old_family = old_family[0]
 
             # Get family comercial partner because we need its current 'ref'.
             old_comercial_partner = models.execute_kw(db, uid, password,
@@ -545,6 +524,8 @@ def register_client(
             if len(old_comercial_partner) != 1:
                 raise Exception('No comercial partner found for client ' + str(old_family['id']))
 
+            old_comercial_partner = old_comercial_partner[0]
+
             # If student_id was used, it will have associated invoices
             invoice_count = models.execute_kw(db, uid, password,
                 'account.invoice', 'search_count',
@@ -553,7 +534,6 @@ def register_client(
 
             # Archive student
             if invoice_count:
-                print 'Student have invoices. Proceding to disable...'
                 models.execute_kw(db, uid, password, 'res.partner', 'write', [
                     [student_id],
                     {
@@ -563,7 +543,6 @@ def register_client(
                 ])
             # Unlink student
             else:
-                print 'Student does not have invoices. Proceding to delete...'
                 models.execute_kw(db, uid, password, 'res.partner', 'unlink', [
                     [student_id]
                 ])
@@ -575,7 +554,6 @@ def register_client(
 
             # Family doesn't have more students
             if not family_students_count:
-                print 'Old family does not have more students.'
                 account_move_lines_count = models.execute_kw(db, uid, password,
                     'account.move.line', 'search_count',
                     [[['partner_id', '=', old_family['id']]]]
@@ -583,9 +561,6 @@ def register_client(
 
                 # Archive family and comercial partner
                 if account_move_lines_count:
-                    print 'Old family have moves. Proceding to disable family and comercial partners...'
-                    print 'Proceding to disable family...'
-
                     # Disable family partner
                     models.execute_kw(db, uid, password, 'res.partner', 'write', [
                         [old_family['id']],
@@ -594,9 +569,7 @@ def register_client(
                             'active': False
                         }
                     ])
-                    print 'Family disabled!'
 
-                    print 'Proceding to disable family comercial...'
                     # Disable family comercial partner
                     models.execute_kw(db, uid, password, 'res.partner', 'write', [
                         [old_comercial_partner['id']],
@@ -605,10 +578,8 @@ def register_client(
                             'active': False
                         }
                     ])
-                    print 'Family comercial disabled!'
                 # Unlink family and comercial partner
                 else:
-                    print 'Old family does not have moves. Proceding to delete family and comercial partners...'
                     models.execute_kw(db, uid, password, 'res.partner', 'unlink', [
                         [old_family['id'], old_comercial_partner['id']]
                     ])
@@ -620,10 +591,8 @@ def register_client(
                 'email': student_profile.user.email,
                 'parent_id': family_id
             }])
-            print 'Student created with new family.'
         # Update student contact
         else:
-            print 'Same parent. Updating student...'
             models.execute_kw(db, uid, password, 'res.partner', 'write', [
                 [student_id],
                 {
@@ -632,17 +601,14 @@ def register_client(
                     'email': student_profile.user.email
                 }
             ])
-            print 'Student updated'
     # Create student contact
     else:
-        print 'No student_id received. Proceding to create one...'
         student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': student_profile.code,
             'name': student_profile.user.first_name,
             'email': student_profile.user.email,
             'parent_id': family_id
         }])
-        print 'Student created!'
 
 
     # Response
@@ -698,6 +664,7 @@ def get_payment_responsable_data(client_id):
     payment_responsable_comercial_name = comercial_partner['name']
     payment_responsable_comercial_number = comercial_partner['vat'] or ''
     payment_responsable_comercial_address = " ".join(address for address in addresses if address)
+    payment_responsable_comercial_email = comercial_partner['email'] or ''
 
     return {
         'display_as': 'user',
@@ -706,6 +673,7 @@ def get_payment_responsable_data(client_id):
         'comercial_name': payment_responsable_comercial_name,
         'comercial_number': payment_responsable_comercial_number,
         'comercial_address': payment_responsable_comercial_address,
+        'comercial_email': payment_responsable_comercial_email,
         'profile_picture': Odoo.DEFAULT_AVATAR,
         'first_name': partner['name'],
         'role': "Cliente registrado"
