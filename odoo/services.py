@@ -102,7 +102,8 @@ def register_client(
         comercial_id,
         comercial_address,
         comercial_number,
-        comercial_name):
+        comercial_name,
+        comercial_email):
     try:
         return api.register_client(
             student_client_id,
@@ -112,7 +113,8 @@ def register_client(
             comercial_id,
             comercial_address,
             comercial_number,
-            comercial_name
+            comercial_name,
+            comercial_email
         )
     except requests.RequestException:
         print ("Error en el request")

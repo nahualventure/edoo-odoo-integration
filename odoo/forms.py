@@ -32,6 +32,7 @@ class PaymentResponsableConfigurationForm(forms.Form):
     comercial_name = forms.CharField(required=True, label=_(u"ie. Juan López"))
     comercial_number = forms.CharField(required=True, label=_(u"ie. 11111111-1"))
     comercial_address = forms.CharField(required=True, label=_(u"ie. Ciudad"))
+    comercial_email = forms.EmailField(required=True, label=_(u"ie. correo@email.com"))
 
 
 class ContractForm(forms.Form):

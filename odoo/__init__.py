@@ -51,7 +51,8 @@ def register_client(
         comercial_id,
         comercial_address,
         comercial_number,
-        comercial_name):
+        comercial_name,
+        comercial_email):
     return services.register_client(
         student_client_id,
         student_profile,
@@ -60,5 +61,6 @@ def register_client(
         comercial_id,
         comercial_address,
         comercial_number,
-        comercial_name
+        comercial_name,
+        comercial_email
     )

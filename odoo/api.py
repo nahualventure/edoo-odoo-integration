@@ -15,6 +15,7 @@ class Odoo:
     CLIENTS = "clients"
     DISCOUNTS = "discounts"
     ACCOUNT_STATEMENT = "account-statement"
+    DEFAULT_AVATAR = "https://www.drupal.org/files/issues/default-avatar.png"
 
     CONTEXT = {
         'host': settings.ODOO_SETTINGS['HOST'],
@@ -397,7 +398,7 @@ def search_clients(query):
             'comercial_name': cm['name'] if cm else None,
             'comercial_number': cm['vat'] if (cm and cm['vat']) else None,
             'comercial_address': " ".join(address for address in addresses if address),
-            'profile_picture': None,
+            'profile_picture': Odoo.DEFAULT_AVATAR,
             'first_name': partner['name'],
             'role': "Cliente registrado"
         }
@@ -415,15 +416,17 @@ def register_client(
         comercial_id,
         comercial_address,
         comercial_number,
-        comercial_name):
+        comercial_name,
+        comercial_email):
     print 'student_client_id: ', student_client_id
-    print 'student_profile: ', student_profile
-    print 'student_tutors: ', student_tutors
+    print 'student_profile: ', student_profile.code
+    print 'student_tutors: ', len(student_tutors)
     print 'client_id: ', client_id
     print 'comercial_id: ', comercial_id
     print 'comercial_address: ', comercial_address
     print 'comercial_number: ', comercial_number
     print 'comercial_name: ', comercial_name
+    print 'comercial_email: ', comercial_email
     """
     client_id: family id, odoo contact top level
     student_client_id: student id, odoo contact child level
@@ -450,7 +453,6 @@ def register_client(
         models.execute_kw(db, uid, password, 'res.partner', 'write', [
             [family_id],
             {
-                'ref': family_code,
                 'email': ",".join(tutors_emails)
             }
         ])
@@ -474,11 +476,10 @@ def register_client(
         models.execute_kw(db, uid, password, 'res.partner', 'write', [
             [family_comercial_id],
             {
-                'ref': comercial_code,
                 'street': comercial_address,
                 'vat': comercial_number,
                 'name': comercial_name,
-                'email': '',
+                'email': comercial_email,
                 'parent_id': family_id,
                 'type': 'invoice'
             }
@@ -492,10 +493,18 @@ def register_client(
             'street': comercial_address,
             'vat': comercial_number,
             'name': comercial_name,
-            'email': '',
+            'email': comercial_email,
             'parent_id': family_id,
             'type': 'invoice'
         }])
+
+        # Update 'vat' separately because it is not set during creation.
+        # TODO: Fix this issue in Odoo.
+        models.execute_kw(db, uid, password, 'res.partner', 'write', [
+            [family_comercial_id],
+            { 'vat': comercial_number }
+        ])
+
         print 'Comercial created!'
 
     # -------- Student contact --------
@@ -519,23 +528,22 @@ def register_client(
         # Check if family has changed for the student
         if student['parent_id'][0] != family_id:
             print 'Student parent changed.'
-            old_family_id = models.execute_kw(db, uid, password,
-                'res.partner', 'search',
+            # Get family partner because we need its current 'ref'.
+            old_family = models.execute_kw(db, uid, password,
+                'res.partner', 'search_read',
                 [[['id', '=', student['parent_id'][0]]]],
-                {'limit': 1}
-            )
-            old_family_id = old_family_id[0]
-
-            old_comercial_partner_id = models.execute_kw(db, uid, password,
-                'res.partner', 'search',
-                [[['parent_id', '=', old_family_id], ['type', '=', 'invoice']]],
-                {'limit': 1}
+                {'limit': 1, 'fields': ['ref']}
             )
 
-            if len(old_comercial_partner_id) != 1:
-                raise Exception('No comercial partner found for client ' + str(old_family_id))
+            # Get family comercial partner because we need its current 'ref'.
+            old_comercial_partner = models.execute_kw(db, uid, password,
+                'res.partner', 'search_read',
+                [[['parent_id', '=', old_family['id']], ['type', '=', 'invoice']]],
+                {'limit': 1, 'fields': ['ref']}
+            )
 
-            old_comercial_partner_id = old_comercial_partner_id[0]
+            if len(old_comercial_partner) != 1:
+                raise Exception('No comercial partner found for client ' + str(old_family['id']))
 
             # If student_id was used, it will have associated invoices
             invoice_count = models.execute_kw(db, uid, password,
@@ -548,7 +556,10 @@ def register_client(
                 print 'Student have invoices. Proceding to disable...'
                 models.execute_kw(db, uid, password, 'res.partner', 'write', [
                     [student_id],
-                    {'active': False}
+                    {
+                        'ref': (student['ref'] or '') + 'INACTIVE',
+                        'active': False
+                    }
                 ])
             # Unlink student
             else:
@@ -559,7 +570,7 @@ def register_client(
 
             family_students_count = models.execute_kw(db, uid, password,
                 'res.partner', 'search_count',
-                [[['parent_id', '=', old_family_id], ['type', '=', 'contact']]]
+                [[['parent_id', '=', old_family['id']], ['type', '=', 'contact']]]
             )
 
             # Family doesn't have more students
@@ -567,21 +578,39 @@ def register_client(
                 print 'Old family does not have more students.'
                 account_move_lines_count = models.execute_kw(db, uid, password,
                     'account.move.line', 'search_count',
-                    [[['partner_id', '=', old_family_id]]]
+                    [[['partner_id', '=', old_family['id']]]]
                 )
 
                 # Archive family and comercial partner
                 if account_move_lines_count:
                     print 'Old family have moves. Proceding to disable family and comercial partners...'
+                    print 'Proceding to disable family...'
+
+                    # Disable family partner
                     models.execute_kw(db, uid, password, 'res.partner', 'write', [
-                        [old_family_id, old_comercial_partner_id],
-                        {'active': False}
+                        [old_family['id']],
+                        {
+                            'ref': (old_family['ref'] or '') + 'INACTIVE',
+                            'active': False
+                        }
                     ])
+                    print 'Family disabled!'
+
+                    print 'Proceding to disable family comercial...'
+                    # Disable family comercial partner
+                    models.execute_kw(db, uid, password, 'res.partner', 'write', [
+                        [old_comercial_partner['id']],
+                        {
+                            'ref': (old_comercial_partner['ref'] or '') + 'INACTIVE',
+                            'active': False
+                        }
+                    ])
+                    print 'Family comercial disabled!'
                 # Unlink family and comercial partner
                 else:
                     print 'Old family does not have moves. Proceding to delete family and comercial partners...'
                     models.execute_kw(db, uid, password, 'res.partner', 'unlink', [
-                        [old_family_id, old_comercial_partner_id]
+                        [old_family['id'], old_comercial_partner['id']]
                     ])
 
             # Create new student with new family
@@ -677,7 +706,7 @@ def get_payment_responsable_data(client_id):
         'comercial_name': payment_responsable_comercial_name,
         'comercial_number': payment_responsable_comercial_number,
         'comercial_address': payment_responsable_comercial_address,
-        'profile_picture': "http://lh3.googleusercontent.com/-zhYZ2MAkVfQ/AAAAAAAAAAI/AAAAAAAAAAA/RDrrSIIg9Jw/photo.jpg",
-        'first_name': comercial_partner['name'],
+        'profile_picture': Odoo.DEFAULT_AVATAR,
+        'first_name': partner['name'],
         'role': "Cliente registrado"
     }

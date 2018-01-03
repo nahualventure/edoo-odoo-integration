@@ -29,6 +29,8 @@ from integrations.services import (
 
 from userprofiles.models import StudentProfile
 
+import utils.services as utilities
+
 '''
 integration configurations keys:
 
@@ -136,6 +138,7 @@ def register_student(request, request_data, student_id, edition=False):
         comercial_number = payment_configuration_form.cleaned_data.get('comercial_number')
         client_id = payment_configuration_form.cleaned_data.get('client_id', None)
         comercial_name = payment_configuration_form.cleaned_data.get('comercial_name')
+        comercial_email = payment_configuration_form.cleaned_data.get('comercial_email')
 
         # Register client service consumption
         (
@@ -150,7 +153,8 @@ def register_student(request, request_data, student_id, edition=False):
             comercial_id,
             comercial_address,
             comercial_number,
-            comercial_name
+            comercial_name,
+            comercial_email
         )
 
         set_integration_configuration(
@@ -194,12 +198,15 @@ def register_student(request, request_data, student_id, edition=False):
                 value='{}'.format(allow_view_voucher)
             )
 
+        # Redirect where it comes from
+        redirect = utilities.deduct_redirect_response(request, None)
+
         # Return a redirect
         return ControllerResponse(
             request,
             _(u"Cliente registrado exitosamente en Odoo"),
             message_position='default',
-            redirect='registration_backend_register_student' if not edition else 'odoo-client-edition'
+            redirect='registration_backend_register_student' if not edition else redirect
         )
 
     response.sets({
