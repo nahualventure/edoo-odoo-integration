@@ -25,7 +25,10 @@ class Odoo:
     }
 
     CUSTOM_SETTINGS = {
-        'family_code_prefix': settings.ODOO_SETTINGS['FAMILY_CODE_PREFIX']
+        'instance_prefix': settings.ODOO_SETTINGS['INSTANCE_PREFIX'],
+        'family_code_prefix': settings.ODOO_SETTINGS['FAMILY_CODE_PREFIX'],
+        'comercial_code_sufix': settings.ODOO_SETTINGS['COMERCIAL_CODE_SUFIX'],
+        'company_pk': settings.ODOO_SETTINGS['COMPANY_PK'],
     }
 
 
@@ -428,9 +431,12 @@ def register_client(
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     # Setup codes
+    instance_prefix = Odoo.CUSTOM_SETTINGS['instance_prefix']
     family_code_prefix = Odoo.CUSTOM_SETTINGS['family_code_prefix']
-    family_code = family_code_prefix + student_profile.code
-    comercial_code = family_code_prefix + student_profile.code + family_code_prefix
+    comercial_code_sufix = Odoo.CUSTOM_SETTINGS['comercial_code_sufix']
+
+    family_code = instance_prefix + family_code_prefix + student_profile.code
+    comercial_code = instance_prefix + family_code_prefix + student_profile.code + comercial_code_sufix
 
     tutors_emails = map(lambda x: x.user.email, student_tutors) if student_tutors else []
 
@@ -450,7 +456,8 @@ def register_client(
         family_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': family_code,
             'name': student_profile.user.last_name,
-            'email': ",".join(tutors_emails)
+            'email': ",".join(tutors_emails),
+            'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
         }])
 
     # -------- Family comercial contact --------
@@ -478,7 +485,8 @@ def register_client(
             'name': comercial_name,
             'email': comercial_email,
             'parent_id': family_id,
-            'type': 'invoice'
+            'type': 'invoice',
+            'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
         }])
 
     # Update 'vat' separately because it is not set during creation.
@@ -586,10 +594,11 @@ def register_client(
 
             # Create new student with new family
             student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
-                'ref': student_profile.code,
+                'ref': instance_prefix + student_profile.code,
                 'name': student_profile.user.first_name,
                 'email': student_profile.user.email,
-                'parent_id': family_id
+                'parent_id': family_id,
+                'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
             }])
         # Update student contact
         else:
@@ -604,10 +613,11 @@ def register_client(
     # Create student contact
     else:
         student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
-            'ref': student_profile.code,
+            'ref': instance_prefix + student_profile.code,
             'name': student_profile.user.first_name,
             'email': student_profile.user.email,
-            'parent_id': family_id
+            'parent_id': family_id,
+            'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
         }])
 
 
