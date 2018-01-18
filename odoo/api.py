@@ -368,7 +368,12 @@ def search_clients(query):
 
     partners = models.execute_kw(db, uid, password,
         'res.partner', 'search_read',
-        [[['name', 'ilike', query], ['child_ids', '!=', False]]]
+        [[
+            '|',
+            ['ref', 'ilike', query],
+            ['name', 'ilike', query],
+            ['child_ids', '!=', False]
+        ]]
     )
 
     partner_ids = list(map(lambda x: int(x['id']), partners))
@@ -598,7 +603,10 @@ def register_client(
             # Create new student with new family
             student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
                 'ref': instance_prefix + student_profile.code,
-                'name': student_profile.user.first_name,
+                'name': '{0}, {1}'.format(
+                    student_profile.user.first_name,
+                    student_profile.user.last_name
+                ),
                 'email': student_profile.user.email,
                 'parent_id': family_id,
                 'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
@@ -609,7 +617,10 @@ def register_client(
                 [student_id],
                 {
                     'ref': student_profile.code,
-                    'name': student_profile.user.first_name,
+                    'name': '{0}, {1}'.format(
+                        student_profile.user.first_name,
+                        student_profile.user.last_name
+                    ),
                     'email': student_profile.user.email
                 }
             ])
@@ -617,7 +628,10 @@ def register_client(
     else:
         student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': instance_prefix + student_profile.code,
-            'name': student_profile.user.first_name,
+            'name': '{0}, {1}'.format(
+                student_profile.user.first_name,
+                student_profile.user.last_name
+            ),
             'email': student_profile.user.email,
             'parent_id': family_id,
             'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
