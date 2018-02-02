@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import requests
 from django.conf import settings
 import xmlrpclib
@@ -448,6 +450,12 @@ def register_client(
 
     tutors_emails = map(lambda x: x.user.email, student_tutors) if student_tutors else []
 
+    # Fallback for None type
+    comercial_name = comercial_name or ''
+    comercial_address = comercial_address or ''
+    student_profile.user.first_name = student_profile.user.first_name or ''
+    student_profile.user.last_name = student_profile.user.last_name or ''
+
     # -------- Family contact --------
 
     # Update family contact
@@ -463,7 +471,7 @@ def register_client(
     else:
         family_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': family_code,
-            'name': student_profile.user.last_name,
+            'name': student_profile.user.last_name.encode('utf-8'),
             'email': ",".join(tutors_emails),
             'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
         }])
@@ -476,9 +484,9 @@ def register_client(
         models.execute_kw(db, uid, password, 'res.partner', 'write', [
             [family_comercial_id],
             {
-                'street': comercial_address,
+                'street': comercial_address.encode('utf-8'),
                 'vat': comercial_number,
-                'name': comercial_name,
+                'name': comercial_name.encode('utf-8'),
                 'email': comercial_email,
                 'parent_id': family_id,
                 'type': 'invoice'
@@ -488,9 +496,9 @@ def register_client(
     else:
         family_comercial_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': comercial_code,
-            'street': comercial_address,
+            'street': comercial_address.encode('utf-8'),
             'vat': comercial_number,
-            'name': comercial_name,
+            'name': comercial_name.encode('utf-8'),
             'email': comercial_email,
             'parent_id': family_id,
             'type': 'invoice',
@@ -604,8 +612,8 @@ def register_client(
             student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
                 'ref': instance_prefix + student_profile.code,
                 'name': '{0}, {1}'.format(
-                    student_profile.user.first_name,
-                    student_profile.user.last_name
+                    student_profile.user.first_name.encode('utf-8'),
+                    student_profile.user.last_name.encode('utf-8')
                 ),
                 'email': student_profile.user.email,
                 'parent_id': family_id,
@@ -618,8 +626,8 @@ def register_client(
                 {
                     'ref': student_profile.code,
                     'name': '{0}, {1}'.format(
-                        student_profile.user.first_name,
-                        student_profile.user.last_name
+                        student_profile.user.first_name.encode('utf-8'),
+                        student_profile.user.last_name.encode('utf-8')
                     ),
                     'email': student_profile.user.email
                 }
@@ -629,8 +637,8 @@ def register_client(
         student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
             'ref': instance_prefix + student_profile.code,
             'name': '{0}, {1}'.format(
-                student_profile.user.first_name,
-                student_profile.user.last_name
+                student_profile.user.first_name.encode('utf-8'),
+                student_profile.user.last_name.encode('utf-8')
             ),
             'email': student_profile.user.email,
             'parent_id': family_id,
