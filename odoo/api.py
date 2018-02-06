@@ -405,6 +405,8 @@ def search_clients(query):
         client_object = {
             'display_as': 'user',
             'client_id': partner['id'],
+            'client_name': partner['name'],
+            'client_ref': partner['ref'],
             'comercial_id': cm['id'] if cm else None,
             'comercial_name': cm['name'] if cm else None,
             'comercial_number': cm['vat'] if (cm and cm['vat']) else None,
@@ -421,17 +423,17 @@ def search_clients(query):
 
 
 def register_client(
-        student_client_id,
-        student_profile,
-        student_tutors,
-        client_id,
-        client_name,
-        client_ref,
-        comercial_id,
-        comercial_address,
-        comercial_number,
-        comercial_name,
-        comercial_email):
+        student_client_id='',
+        student_profile=None,
+        student_tutors=[],
+        client_id='',
+        client_name='',
+        client_ref='',
+        comercial_id='',
+        comercial_address='',
+        comercial_number='',
+        comercial_name='',
+        comercial_email=''):
     """
     client_id: family id, odoo contact top level
     student_client_id: student id, odoo contact child level
@@ -447,14 +449,13 @@ def register_client(
     family_code_prefix = Odoo.CUSTOM_SETTINGS['family_code_prefix']
     comercial_code_sufix = Odoo.CUSTOM_SETTINGS['comercial_code_sufix']
 
-    family_code = instance_prefix + family_code_prefix + student_profile.code
-    comercial_code = instance_prefix + family_code_prefix + student_profile.code + comercial_code_sufix
+    family_code = instance_prefix + family_code_prefix + client_ref
+    family_name = client_name
+    comercial_code = instance_prefix + family_code_prefix + client_ref + comercial_code_sufix
 
     tutors_emails = map(lambda x: x.user.email, student_tutors) if student_tutors else []
 
     # Fallback for None type
-    comercial_name = comercial_name or ''
-    comercial_address = comercial_address or ''
     student_profile.user.first_name = student_profile.user.first_name or ''
     student_profile.user.last_name = student_profile.user.last_name or ''
 
@@ -472,8 +473,8 @@ def register_client(
     # Create family contact
     else:
         family_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
-            'ref': family_code,
-            'name': student_profile.user.last_name.encode('utf-8'),
+            'ref': family_code.encode('utf-8'),
+            'name': family_name.encode('utf-8'),
             'email': ",".join(tutors_emails),
             'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
         }])
@@ -706,6 +707,8 @@ def get_payment_responsable_data(client_id):
     return {
         'display_as': 'user',
         'client_id': payment_responsable_client_id,
+        'client_name': partner['name'],
+        'client_ref': partner['ref'],
         'comercial_id': payment_responsable_comercial_id,
         'comercial_name': payment_responsable_comercial_name,
         'comercial_number': payment_responsable_comercial_number,

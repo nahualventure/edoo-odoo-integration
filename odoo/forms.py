@@ -29,7 +29,7 @@ class PaymentResponsableConfigurationForm(forms.Form):
     student_client_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
     client_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
     client_name = forms.CharField(required=True, label=_(u"ie. López Pérez"))
-    client_ref = forms.CharField(required=True, label=_(u"ie. 2018-0001"))
+    client_ref = forms.CharField(required=False, label=_(u"Vacío para autogenerar"))
     comercial_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
     comercial_name = forms.CharField(required=True, label=_(u"ie. Juan López"))
     comercial_number = forms.CharField(required=True, label=_(u"ie. 11111111-1"))

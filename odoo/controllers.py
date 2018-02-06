@@ -144,6 +144,16 @@ def register_student(request, request_data, student_id, edition=False):
         comercial_name = payment_configuration_form.cleaned_data.get('comercial_name')
         comercial_email = payment_configuration_form.cleaned_data.get('comercial_email')
 
+        if not client_ref:
+            code_generator_string = get_integration_configuration(
+                integration_key='odoo',
+                object_instance=None,
+                key='code_generator',
+                default='lambda s: s.code'
+            )
+            code_generator = eval(code_generator_string)
+            client_ref = code_generator(student_profile)
+
         # Register client service consumption
         (
             client_id,
