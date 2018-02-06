@@ -425,6 +425,8 @@ def register_client(
         student_profile,
         student_tutors,
         client_id,
+        client_name,
+        client_ref,
         comercial_id,
         comercial_address,
         comercial_number,

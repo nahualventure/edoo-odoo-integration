@@ -77,6 +77,8 @@ def registration(request, student_id):
         payment_configuration_form = PaymentResponsableConfigurationForm(initial={
             'student_client_id': student_client_id,
             'client_id': res_data['client_id'],
+            'client_name': res_data['client_name'],
+            'client_ref': res_data['client_ref'],
             'comercial_id': res_data['comercial_id'],
             'comercial_name': res_data['comercial_name'],
             'comercial_number': res_data['comercial_number'],
@@ -137,6 +139,8 @@ def register_student(request, request_data, student_id, edition=False):
         comercial_address = payment_configuration_form.cleaned_data.get('comercial_address')
         comercial_number = payment_configuration_form.cleaned_data.get('comercial_number')
         client_id = payment_configuration_form.cleaned_data.get('client_id', None)
+        client_name = payment_configuration_form.cleaned_data.get('client_name', None)
+        client_ref = payment_configuration_form.cleaned_data.get('client_ref', None)
         comercial_name = payment_configuration_form.cleaned_data.get('comercial_name')
         comercial_email = payment_configuration_form.cleaned_data.get('comercial_email')
 
@@ -150,6 +154,8 @@ def register_student(request, request_data, student_id, edition=False):
             student_profile,
             student_tutors,
             client_id,
+            client_name,
+            client_ref,
             comercial_id,
             comercial_address,
             comercial_number,
