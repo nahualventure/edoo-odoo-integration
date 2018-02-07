@@ -219,7 +219,7 @@ def get_account_statement(client_id, comercial_id, filters):
     for account_invoice_line in account_invoice_lines:
         invoice_line_indexed[account_invoice_line['id']] = {
             'display_name': account_invoice_line['display_name'],
-            'price_subtotal_signed': account_invoice_line['price_subtotal_signed']
+            'x_price_subtotal_included': account_invoice_line['x_price_subtotal_included']
         }
 
     # Include descriptions.
@@ -229,7 +229,7 @@ def get_account_statement(client_id, comercial_id, filters):
                 lambda x: {
                     'id': x,
                     'display_name': invoice_line_indexed[x]['display_name'],
-                    'price_subtotal_signed': invoice_line_indexed[x]['price_subtotal_signed']
+                    'x_price_subtotal_included': invoice_line_indexed[x]['x_price_subtotal_included']
                 },
                 invoice['invoice_line_ids']
             )
