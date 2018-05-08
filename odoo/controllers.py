@@ -87,21 +87,21 @@ def registration(request, student_id):
 
     permissions_formset = TutorPermissionsFormset(initial=[
         {
-            'tutor': relationaship.tutor,
-            'allow_view_account_statement': get_integration_configuration(
+            'tutor': relationship.tutor,
+            'allow_view_account_statement': True if get_integration_configuration(
                 integration_key='odoo',
                 object_instance=relationship,
                 key='allow_view_account_statement',
-                default=True
-            ),
-            'allow_view_voucher': get_integration_configuration(
+                default=False
+            ) == 'True' else False,
+            'allow_view_voucher': True if get_integration_configuration(
                 integration_key='odoo',
                 object_instance=relationship,
                 key='allow_view_voucher',
-                default=True
-            )
+                default=False
+            ) == 'True' else False
         }
-        for relationaship in relationships
+        for relationship in relationships
     ], )
 
     response.sets({
