@@ -10,6 +10,9 @@ def create_client(data):
 def call_client(client_id):
     return services.call_client(client_id)
 
+def call_data_clients(client_ids, fields):
+    return services.call_data_clients(client_ids, fields)
+
 
 def update_client(client_id, data):
     return services.update_client(client_id, data)
