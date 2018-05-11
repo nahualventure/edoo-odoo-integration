@@ -75,8 +75,6 @@ def get_data_clients(client_ids, fields):
     url, db, username, password = get_odoo_settings()
     uid = services.authenticate_user(url, db, username, password)
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
-    print client_ids
-    print fields
     clients = models.execute_kw(db, uid, password,
                 'res.partner', 'search_read',
                 [[['id', 'in', client_ids]]],
