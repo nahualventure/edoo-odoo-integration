@@ -82,8 +82,7 @@ def get_data_clients(client_ids, fields):
             )
     comercial_clients = models.execute_kw(db, uid, password,
             'res.partner', 'search_read',
-            [[['parent_id', 'in', client_ids]], ['type', '=', 'invoice']],
-            {'fields': fields}
+            [[['parent_id', 'in', client_ids], ['type', '=', 'invoice']]]
         )
     print comercial_clients
     return comercial_clients
