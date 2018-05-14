@@ -17,86 +17,220 @@ from utils import services as utilities
 from integrations.services import get_integration_id
 
 import services
-from forms import ContractForm
+from forms import (
+    ContractForm,
+    TutorPermissionsFormset,
+    PaymentResponsableConfigurationForm
+)
+from integrations.services import (
+    set_integration_configuration,
+    get_integration_configuration
+)
 
-User = get_user_model()
+from userprofiles.models import StudentProfile
+
+import utils.services as utilities
+
+'''
+integration configurations keys:
+
+client_id
+payment_responsable_client_id
+payment_responsable_comercial_id
+allow_view_account_statement
+allow_view_voucher
 
 
-def get_contract(request, username):
+'''
 
-    # Get the user data and response
-    user = User.objects.get(username=username)
 
-    # Student profile
-    student_profile = user.studentprofile
+def registration(request, student_id):
+
+    # Get the student profile
+    student_profile = StudentProfile.objects.get(id=student_id)
 
     # Get the student tutors
-    student_tutors = [relationship.tutor
-                      for relationship
-                      in StudentTutorRelationship.objects.filter(student_profile=student_profile)]
+    relationships = StudentTutorRelationship.objects.filter(student_profile=student_profile)
+    student_tutors = [relationship.tutor for relationship in relationships]
 
-    success, contracts_data = services.call_contracts()
+    response = ControllerResponse(request, _(u"Mensaje de respuesta por defecto"))
 
-    try:
-        contracts = contracts_data['results']
+    # Initial data
+    student_client_id = get_integration_configuration(
+        integration_key='odoo',
+        object_instance=student_profile,
+        key='client_id',
+        default=False
+    )
 
-        # Random default contract
-        default_contract = contracts.keys()[0]
-        products = contracts[default_contract]['products']
+    payment_responsable_client_id = get_integration_configuration(
+        integration_key='odoo',
+        object_instance=student_profile,
+        key='payment_responsable_client_id',
+        default=False
+    )
 
-        # Set default_contract
-        for pk, val in contracts.items():
-            if val[u'default']:
-                default_contract = pk
-                products = val['products']
+    payment_configuration_form = PaymentResponsableConfigurationForm()
+    res_data = None
+    if payment_responsable_client_id != False:
+        res_data = services.get_payment_responsable_data(payment_responsable_client_id)
+        payment_configuration_form = PaymentResponsableConfigurationForm(initial={
+            'student_client_id': student_client_id,
+            'client_id': res_data['client_id'],
+            'client_name': res_data['client_name'],
+            'client_ref': res_data['client_ref'],
+            'comercial_id': res_data['comercial_id'],
+            'comercial_name': res_data['comercial_name'],
+            'comercial_number': res_data['comercial_number'],
+            'comercial_address': res_data['comercial_address']
+        })
 
-        contract_initial = {
-            'contract_id': default_contract
+    permissions_formset = TutorPermissionsFormset(initial=[
+        {
+            'tutor': relationship.tutor,
+            'allow_view_account_statement': True if get_integration_configuration(
+                integration_key='odoo',
+                object_instance=relationship,
+                key='allow_view_account_statement',
+                default=False
+            ) == 'True' else False,
+            'allow_view_voucher': True if get_integration_configuration(
+                integration_key='odoo',
+                object_instance=relationship,
+                key='allow_view_voucher',
+                default=False
+            ) == 'True' else False
         }
+        for relationship in relationships
+    ], )
 
-        if len(student_tutors) > 0:
-            # Get integration object
-            client_id = get_integration_id(student_tutors[0].user)
-            success, client_info = services.call_client(client_id)
+    response.sets({
+        'student_profile': student_profile,
+        'student_tutors': student_tutors,
+        'payment_configuration_form': payment_configuration_form,
+        'permissions_formset': permissions_formset,
+        'prefilled_result': res_data,
+        'studentprofile': student_profile,
+        'user': student_profile.user,
+        'current_view': 'odoo'
+    })
 
-            for hash_key, tag in [
-                    ('name', 'invoice_name'),
-                    ('nit', 'invoice_identifier'),
-                    ('phone', 'invoice_phone'),
-                    ('address', 'invoice_address')]:
-                contract_initial[hash_key] = client_info[tag] if tag in client_info else ''
+    return response
 
-        contract_form = ContractForm(
-            initial=contract_initial,
-            contract=((contract, contracts[contract]['name']) for contract in contracts.keys()),
-            parents=((tutor.user.username, tutor.user.formal_name) for tutor in student_tutors)
+
+def register_student(request, request_data, student_id, edition=False):
+    # Get the student profile
+    student_profile = StudentProfile.objects.get(id=student_id)
+
+    # Get the student tutors
+    relationships = StudentTutorRelationship.objects.filter(student_profile=student_profile)
+    student_tutors = [relationship.tutor for relationship in relationships]
+
+    response = ControllerResponse(request, _(u"Mensaje de respuesta por defecto"))
+
+    payment_configuration_form = PaymentResponsableConfigurationForm(request_data)
+    permissions_formset = TutorPermissionsFormset(request_data)
+
+    if payment_configuration_form.is_valid() and permissions_formset.is_valid():
+
+        # Billing data
+        student_client_id = payment_configuration_form.cleaned_data.get('student_client_id', None)
+        comercial_id = payment_configuration_form.cleaned_data.get('comercial_id', None)
+        comercial_address = payment_configuration_form.cleaned_data.get('comercial_address')
+        comercial_number = payment_configuration_form.cleaned_data.get('comercial_number')
+        client_id = payment_configuration_form.cleaned_data.get('client_id', None)
+        client_name = payment_configuration_form.cleaned_data.get('client_name', None)
+        client_ref = payment_configuration_form.cleaned_data.get('client_ref', None)
+        comercial_name = payment_configuration_form.cleaned_data.get('comercial_name')
+        comercial_email = payment_configuration_form.cleaned_data.get('comercial_email')
+
+        if not client_ref:
+            code_generator_string = get_integration_configuration(
+                integration_key='odoo',
+                object_instance=None,
+                key='code_generator',
+                default='lambda s: s.code'
+            )
+            code_generator = eval(code_generator_string)
+            client_ref = code_generator(student_profile)
+
+        # Register client service consumption
+        (
+            client_id,
+            payment_responsable_client_id,
+            payment_responsable_comercial_id
+        ) = services.register_client(
+            student_client_id,
+            student_profile,
+            student_tutors,
+            client_id,
+            client_name,
+            client_ref,
+            comercial_id,
+            comercial_address,
+            comercial_number,
+            comercial_name,
+            comercial_email
         )
 
-        response = ControllerResponse(request, _(u"Mensaje de respuesta por defecto"))
-
-        response.sets({
-            'user': user,
-            'student_profile': student_profile,
-            'contracts_json': json.dumps(contracts),
-            'contracts': contracts,
-            'products': products,
-            'contract_form': contract_form,
-            'student_tutors': student_tutors
-        })
-    except KeyError:
-
-        contract_form = ContractForm(
-            parents=((tutor.user.username, tutor.user.formal_name) for tutor in student_tutors)
+        set_integration_configuration(
+            integration_key='odoo',
+            object_instance=student_profile,
+            key='client_id',
+            value='{}'.format(client_id)
         )
 
-        response = ControllerResponse(request, _(u"Problemas de conexión hacia Odoo"))
+        set_integration_configuration(
+            integration_key='odoo',
+            object_instance=student_profile,
+            key='payment_responsable_client_id',
+            value='{}'.format(payment_responsable_client_id)
+        )
 
-        response.sets({
-            'user': user,
-            'student_profile': student_profile,
-            'contract_form': contract_form,
-            'student_tutors': student_tutors
-        })
+        set_integration_configuration(
+            integration_key='odoo',
+            object_instance=student_profile,
+            key='payment_responsable_comercial_id',
+            value='{}'.format(payment_responsable_comercial_id)
+        )
+
+        # Save configuration for each tutor
+        for tutor_configuration in permissions_formset.cleaned_data:
+            tutor = tutor_configuration['tutor']
+            allow_view_account_statement = tutor_configuration['allow_view_account_statement']
+            allow_view_voucher = tutor_configuration['allow_view_voucher']
+
+            set_integration_configuration(
+                integration_key='odoo',
+                object_instance=relationships.filter(tutor=tutor).first(),
+                key='allow_view_account_statement',
+                value='{}'.format(allow_view_account_statement)
+            )
+
+            set_integration_configuration(
+                integration_key='odoo',
+                object_instance=relationships.filter(tutor=tutor).first(),
+                key='allow_view_voucher',
+                value='{}'.format(allow_view_voucher)
+            )
+
+        # Redirect where it comes from
+        redirect = utilities.deduct_redirect_response(request, None)
+
+        # Return a redirect
+        return ControllerResponse(
+            request,
+            _(u"Cliente registrado exitosamente en Odoo"),
+            message_position='default',
+            redirect='registration_backend_register_student' if not edition else redirect
+        )
+
+    response.sets({
+        'student_profile': student_profile,
+        'student_tutors': student_tutors,
+        'payment_configuration_form': payment_configuration_form,
+        'permissions_formset': permissions_formset
+    })
 
     return response
 
@@ -193,3 +327,7 @@ def set_contract(request, username, request_data, redirect_url=None):
 
     response.set_error()
     return response
+
+
+def search_clients(request, query):
+    return JsonResponse(services.search_clients(query), safe=False)

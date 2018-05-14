@@ -5,9 +5,19 @@ import views
 
 urlpatterns = [
     url(
-        r'^(?P<username>[\w.@+-]+)/set_contract/$',
-        views.get_contract,
-        name='odoo-get-contract'
+        r'^(?P<student_id>[\w.@+-]+)/registration/$',
+        views.registration,
+        name='odoo-registration'
+    ),
+    url(
+        r'^(?P<student_id>[\w.@+-]+)/client-edition/$',
+        views.client_edition,
+        name='odoo-client-edition'
+    ),
+    url(
+        r'^search/clients/$',
+        views.search_clients,
+        name='odoo-search-clients'
     ),
     url(
         r'^ajax/tutor-invoice/$',
