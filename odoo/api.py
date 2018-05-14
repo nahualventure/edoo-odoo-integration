@@ -84,11 +84,11 @@ def get_data_clients(client_ids, fields):
     fields.append('parent_id')
     comercial_clients = models.execute_kw(db, uid, password,
             'res.partner', 'search_read',
-            [[['parent_id', 'in', client_ids], ['type', '=', 'invoice']]],
+            [[['parent_id', 'in', clients], ['type', '=', 'invoice']]],
             {'fields': fields}
         )
     for comercial in comercial_clients:
-        comercial['references_name'] = filter(lambda parent: comercial['parent_id']== parent['id'], clients)[0]
+        comercial['references_name'] = filter(lambda parent: comercial['parent_id'] == parent['id'], clients)[0]
 
     print comercial_clients
     return comercial_clients
