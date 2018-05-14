@@ -71,6 +71,20 @@ def get_client(client_id):
 
     return client[0]
 
+def get_data_clients(client_ids, fields):
+    url, db, username, password = get_odoo_settings()
+    uid = services.authenticate_user(url, db, username, password)
+    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+
+    fields.append('parent_id')
+    comercial_clients = models.execute_kw(db, uid, password,
+            'res.partner', 'search_read',
+            [[['parent_id', 'in', client_ids], ['type', '=', 'invoice']]],
+            {'fields': fields}
+        )
+
+    return comercial_clients
+
 
 def put_client(client_id, data):
     return requests.put("{0}{1}/{2}".format(Odoo.BASE_URL, Odoo.CLIENTS, client_id),

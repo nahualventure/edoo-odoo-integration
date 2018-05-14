@@ -23,6 +23,15 @@ def call_client(client_id):
         print ("Error en el request")
         return None
 
+def call_data_clients(client_ids, fields):
+    try:
+        response = api.get_data_clients(client_ids, fields)
+
+        return response
+    except requests.RequestException:
+        print ("Error en el request")
+        return None
+
 
 def update_client(client_id, data):
     try:
