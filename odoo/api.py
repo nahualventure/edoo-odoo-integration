@@ -138,7 +138,7 @@ def get_account_statement(client_id, comercial_id, filters):
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     transactions_by_company = models.execute_kw(db, uid, password,
-            'api.integration', 'get_account_statement',
+            'edoo.api.integration', 'get_account_statement',
                 [{'comercial_id': comercial_id,
                 'client_id': comercial_id,
                 'allowed_invoice_journals': allowed_invoice_journals,
