@@ -29,6 +29,8 @@ def call_discounts():
 def call_account_statement(client_id, comercial_id, data):
     return services.call_account_statement(client_id, comercial_id, data)
 
+def call_account_statement_legacy(client_id, comercial_id, data):
+    return services.call_account_statement_legacy(client_id, comercial_id, data)
 
 def set_contract(client_id, data):
     return services.set_contract(client_id, data)
