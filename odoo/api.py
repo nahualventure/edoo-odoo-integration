@@ -6,6 +6,7 @@ import xmlrpclib
 import time
 import services
 import json
+from pprint import pprint
 
 
 if not hasattr(settings, 'ODOO_SETTINGS'):
@@ -127,8 +128,6 @@ def get_allowed_payment_journals():
 
 def get_account_statement(client_id, comercial_id, filters):
     url, db, username, password = get_odoo_settings()
-    comercial_id = int(comercial_id)
-    client_id = int(client_id)
 
     uid = services.authenticate_user(url, db, username, password)
 
@@ -191,6 +190,8 @@ def get_account_statement_legacy(client_id, comercial_id, filters):
         [query_filters],
         {'order': 'company_id, date_invoice'}
     )
+
+    pprint(account_invoices)
 
     account_invoice_line_ids = []
 
