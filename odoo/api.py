@@ -137,7 +137,7 @@ def get_account_statement(client_id, comercial_id, filters):
     transactions_by_company = models.execute_kw(db, uid, password,
             'edoo.api.integration', 'get_account_statement',
                 [{'comercial_id': comercial_id,
-                'client_id': comercial_id,
+                'client_id': client_id,
                 'allowed_invoice_journals': get_allowed_invoice_journals(),
                 'allowed_payment_journals': get_allowed_payment_journals(),
                 'filters': filters}]
