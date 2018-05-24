@@ -293,7 +293,6 @@ def get_account_statement_legacy(client_id, comercial_id, filters):
     Payments
     --------------------------------------------
     """
-    print query_filters
     # Get client payments.
     account_payments = models.execute_kw(db, uid, password,
         'account.payment', 'search_read',
