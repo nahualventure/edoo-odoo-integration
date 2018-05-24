@@ -182,16 +182,12 @@ def get_account_statement_legacy(client_id, comercial_id, filters):
     --------------------------------------------
     """
 
-    print query_filters
-
     # Get client invoices.
     account_invoices = models.execute_kw(db, uid, password,
         'account.invoice', 'search_read',
         [query_filters],
         {'order': 'company_id, date_invoice'}
     )
-
-    pprint(account_invoices)
 
     account_invoice_line_ids = []
 
