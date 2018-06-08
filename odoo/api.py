@@ -126,23 +126,24 @@ def get_allowed_invoice_journals():
 def get_allowed_payment_journals():
     return settings.ODOO_SETTINGS['ALLOWED_PAYMENT_JOURNALS']
 
-def get_account_statement(client_id, comercial_id, filters):
+def get_account_statement(clients, filters):
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
 
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
-    transactions_by_company = models.execute_kw(db, uid, password,
+    transactions_by_client = models.execute_kw(db, uid, password,
             'edoo.api.integration', 'get_account_statement',
-                [{'comercial_id': comercial_id,
-                'client_id': client_id,
-                'allowed_invoice_journals': get_allowed_invoice_journals(),
-                'allowed_payment_journals': get_allowed_payment_journals(),
-                'filters': filters}]
+                [{
+                    'clients': clients,
+                    'allowed_invoice_journals': get_allowed_invoice_journals(),
+                    'allowed_payment_journals': get_allowed_payment_journals(),
+                    'filters': filters
+                }]
         )
 
-    return transactions_by_company
+    return transactions_by_client
 
 def get_account_statement_legacy(client_id, comercial_id, filters):
     url, db, username, password = get_odoo_settings()
