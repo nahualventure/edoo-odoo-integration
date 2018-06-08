@@ -133,7 +133,7 @@ def get_account_statement(clients, filters):
 
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
-    transactions_by_company = models.execute_kw(db, uid, password,
+    transactions_by_client = models.execute_kw(db, uid, password,
             'edoo.api.integration', 'get_account_statement',
                 [{
                     'clients': clients,
@@ -142,8 +142,8 @@ def get_account_statement(clients, filters):
                     'filters': filters
                 }]
         )
-
-    return transactions_by_company
+    print transactions_by_client
+    return transactions_by_client
 
 def get_account_statement_legacy(client_id, comercial_id, filters):
     url, db, username, password = get_odoo_settings()
