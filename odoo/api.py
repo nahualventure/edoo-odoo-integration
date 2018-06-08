@@ -142,7 +142,12 @@ def get_account_statement(clients, filters):
                     'filters': filters
                 }]
         )
-    print transactions_by_client
+    print {
+                    'clients': clients,
+                    'allowed_invoice_journals': get_allowed_invoice_journals(),
+                    'allowed_payment_journals': get_allowed_payment_journals(),
+                    'filters': filters
+                }
     return transactions_by_client
 
 def get_account_statement_legacy(client_id, comercial_id, filters):
