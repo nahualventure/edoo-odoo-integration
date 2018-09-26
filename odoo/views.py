@@ -3,6 +3,8 @@
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import AllowAny
 
 import controllers
 from utils import services as utilities
@@ -69,3 +71,18 @@ def tutor_invoice(request):
 def search_clients(request):
     query = request.GET.get('text', "")
     return controllers.search_clients(request, query)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def enroll_student(request, student_code):
+    """
+    Require: POST
+
+    **POST**: change pre_registered field
+    """
+
+    cr = controllers.enroll_student(request, student_code)
+
+    return cr

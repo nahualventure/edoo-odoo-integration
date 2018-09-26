@@ -27,9 +27,11 @@ from integrations.services import (
     get_integration_configuration
 )
 
-from userprofiles.models import StudentProfile
+from userprofiles.models import StudentProfile, StudentProfileCycle
 
 import utils.services as utilities
+from cycle.services import get_current_cycle
+from cycle.models import Cycle
 
 '''
 integration configurations keys:
@@ -331,3 +333,48 @@ def set_contract(request, username, request_data, redirect_url=None):
 
 def search_clients(request, query):
     return JsonResponse(services.search_clients(query), safe=False)
+
+
+def enroll_student(request, student_code):
+
+    cycle_name = request.GET.get('cycle_name', None)
+    current_cycle = get_current_cycle()
+    student = StudentProfile.objects.filter(code=student_code)
+
+    kwargs = {}
+    if cycle_name:
+        kwargs['name'] = cycle_name
+    else:
+        kwargs['ordinal'] = current_cycle.ordinal + 1
+
+    cycle = Cycle.objects.filter(**kwargs)
+
+    if not student.exists() or not cycle.exists():
+        response = JsonResponse({
+                'error': 'Provide existing student code or cycle name'
+            }, status=500)
+        return response
+
+    cycle = cycle.first()
+    student = student.first()
+
+    if student.current_cycle.ordinal == cycle.ordinal - 1:
+        student.pre_registered = True
+
+    elif student.current_cycle.ordinal < cycle.ordinal:
+        if not StudentProfileCycle.objects.filter(
+            student_profile=student,
+            cycle=cycle).exists():
+            new_student_cycle = StudentProfileCycle(
+                student_profile=student,
+                cycle=cycle)
+            new_student_cycle.save()
+
+    student.user.is_active = True
+    student.user.save()
+    student.save()
+
+    response = JsonResponse({
+            'message': 'student enrolled'
+        }, status=200)
+    return response
