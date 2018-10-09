@@ -5,9 +5,9 @@ import views
 
 urlpatterns = [
     url(
-        r'^student/(?P<student_code>[-A-Za-z0-9_]+)/enroll/$',
-        views.enroll_student,
-        name='enroll_student'
+        r'^student/enroll-or-unenroll/$',
+        views.enroll_or_unenroll_student,
+        name='enroll_or_unenroll_student'
     ),
     url(
         r'^(?P<student_id>[\w.@+-]+)/registration/$',

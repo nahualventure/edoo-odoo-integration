@@ -32,7 +32,8 @@ from userprofiles.models import StudentProfile, StudentProfileCycle
 import utils.services as utilities
 from cycle.services import get_current_cycle
 from cycle.models import Cycle
-
+from integrations.models import Integration, IntegrationConfig
+from django.contrib.contenttypes.models import ContentType
 '''
 integration configurations keys:
 
@@ -335,46 +336,61 @@ def search_clients(request, query):
     return JsonResponse(services.search_clients(query), safe=False)
 
 
-def enroll_student(request, student_code):
-
-    cycle_name = request.GET.get('cycle_name', None)
+def enroll_or_unenroll_student(request):
     current_cycle = get_current_cycle()
-    student = StudentProfile.objects.filter(code=student_code)
+    data = request.data.get('data', [])
 
-    kwargs = {}
-    if cycle_name:
-        kwargs['name'] = cycle_name
-    else:
-        kwargs['ordinal'] = current_cycle.ordinal + 1
+    for enroll in data:
+        cycle_pk = enroll['cycle_pk']
+        student_client_id = enroll['student_client_id']
+        enrolled_in_odoo = enroll['is_enrolled']
+        student = _get_student(student_client_id)
 
-    cycle = Cycle.objects.filter(**kwargs)
+        kwargs = {}
+        if cycle_pk:
+            kwargs['pk'] = cycle_pk
+        else:
+            kwargs['ordinal'] = current_cycle.ordinal + 1
 
-    if not student.exists() or not cycle.exists():
-        response = JsonResponse({
-                'error': 'Provide existing student code or cycle name'
-            }, status=500)
-        return response
+        cycle = Cycle.objects.filter(**kwargs)
 
-    cycle = cycle.first()
-    student = student.first()
+        if not student or not cycle.exists():
+            response = JsonResponse({
+                    'error': 'Provide existing student code or cycle name'
+                }, status=500)
+            return response
 
-    if student.current_cycle.ordinal == cycle.ordinal - 1:
-        student.pre_registered = True
+        cycle = cycle.first()
 
-    elif student.current_cycle.ordinal < cycle.ordinal:
-        if not StudentProfileCycle.objects.filter(
-            student_profile=student,
-            cycle=cycle).exists():
-            new_student_cycle = StudentProfileCycle(
-                student_profile=student,
-                cycle=cycle)
-            new_student_cycle.save()
+        if student.current_cycle.ordinal == cycle.ordinal - 1:
+            student.pre_registered = enrolled_in_odoo
 
-    student.user.is_active = True
-    student.user.save()
-    student.save()
+        elif student.current_cycle.ordinal < cycle.ordinal and enrolled_in_odoo:
+            rel = StudentProfileCycle.objects.filter(student_profile=student, cycle=cycle)
+            if not rel.exists():
+                new_student_cycle = StudentProfileCycle(
+                    student_profile=student,
+                    cycle=cycle)
+                new_student_cycle.save()
+            if not student.user.is_active:
+                student.user.is_active = True
 
-    response = JsonResponse({
-            'message': 'student enrolled'
-        }, status=200)
-    return response
+        elif student.current_cycle.ordinal < cycle.ordinal and not enrolled_in_odoo:
+            rel = StudentProfileCycle.objects.filter(student_profile=student, cycle=cycle)
+            if rel.exists():
+                rel = rel.first()
+                rel.delete()
+            student.user.is_active = False
+
+        else:
+            student.user.is_active = enrolled_in_odoo
+        student.user.save()
+        student.save()
+
+    return JsonResponse({ 'message': 'students enrolled' }, status=200)
+
+
+def _get_student(student_client_id):
+    config = IntegrationConfig.objects.get(key='client_id', value=student_client_id)
+    content_type = ContentType.objects.get(pk=config.content_type.pk)
+    return content_type.get_object_for_this_type(pk=config.object_id)

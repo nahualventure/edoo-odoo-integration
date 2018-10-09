@@ -76,13 +76,12 @@ def search_clients(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @authentication_classes([])
-def enroll_student(request, student_code):
+def enroll_or_unenroll_student(request):
     """
     Require: POST
 
-    **POST**: change pre_registered field
     """
 
-    cr = controllers.enroll_student(request, student_code)
+    cr = controllers.enroll_or_unenroll_student(request)
 
     return cr
