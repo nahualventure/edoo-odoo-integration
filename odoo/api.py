@@ -37,8 +37,8 @@ class Odoo:
 
 def post_client(data):
     url, db, username, password = get_odoo_settings()
-
     uid = services.authenticate_user(url, db, username, password)
+    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     odoo_client_id = models.execute_kw(db, uid, password,
         'res.partner', 'create',
@@ -557,6 +557,8 @@ def register_client(
             [[['id', '=', student_id]]],
             {'limit': 1}
         )
+        
+        print student
 
         if len(student) != 1:
             raise Exception('No client found for id ' + str(student_id))
