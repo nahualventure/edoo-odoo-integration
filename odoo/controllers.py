@@ -394,6 +394,7 @@ def enroll_or_unenroll_student(request):
 
         else:
             student.user.is_active = enrolled_in_odoo
+            student.pre_registered = enrolled_in_odoo
             _add_success_partner(student_client_id, enrolled_in_odoo)
 
         student.user.save()
