@@ -339,6 +339,13 @@ def search_clients(request, query):
 def enroll_or_unenroll_student(request):
     current_cycle = get_current_cycle()
     data = request.data.get('data', [])
+    success_partners = []
+
+    def _add_success_partner(id, enrolled):
+        success_partners.append({
+            'id': id,
+            'registered': enrolled
+        })
 
     for enroll in data:
         cycle_pk = enroll['cycle_pk']
@@ -364,6 +371,7 @@ def enroll_or_unenroll_student(request):
 
         if student.current_cycle.ordinal == cycle.ordinal - 1:
             student.pre_registered = enrolled_in_odoo
+            _add_success_partner(student_client_id, enrolled_in_odoo)
 
         elif student.current_cycle.ordinal < cycle.ordinal and enrolled_in_odoo:
             rel = StudentProfileCycle.objects.filter(student_profile=student, cycle=cycle)
@@ -374,6 +382,7 @@ def enroll_or_unenroll_student(request):
                 new_student_cycle.save()
             if not student.user.is_active:
                 student.user.is_active = True
+            _add_success_partner(student_client_id, enrolled_in_odoo)
 
         elif student.current_cycle.ordinal < cycle.ordinal and not enrolled_in_odoo:
             rel = StudentProfileCycle.objects.filter(student_profile=student, cycle=cycle)
@@ -381,13 +390,16 @@ def enroll_or_unenroll_student(request):
                 rel = rel.first()
                 rel.delete()
             student.user.is_active = False
+            _add_success_partner(student_client_id, enrolled_in_odoo)
 
         else:
             student.user.is_active = enrolled_in_odoo
+            _add_success_partner(student_client_id, enrolled_in_odoo)
+
         student.user.save()
         student.save()
 
-    return JsonResponse({ 'message': 'students enrolled' }, status=200)
+    return JsonResponse({ 'message': 'done!', 'partners': success_partners }, status=200)
 
 
 def _get_student(student_client_id):
