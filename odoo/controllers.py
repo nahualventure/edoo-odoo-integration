@@ -34,6 +34,7 @@ from cycle.services import get_current_cycle
 from cycle.models import Cycle
 from integrations.models import Integration, IntegrationConfig
 from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
 '''
 integration configurations keys:
 
@@ -347,60 +348,61 @@ def enroll_or_unenroll_student(request):
             'registered': enrolled
         })
 
-    for enroll in data:
-        cycle_pk = enroll['cycle_pk']
-        student_client_id = enroll['student_client_id']
-        enrolled_in_odoo = enroll['is_enrolled']
-        student = _get_student(student_client_id)
+    with transaction.atomic():
+        for enroll in data:
+            cycle_pk = enroll['cycle_pk']
+            student_client_id = enroll['student_client_id']
+            enrolled_in_odoo = enroll['is_enrolled']
+            student = _get_student(student_client_id)
 
-        kwargs = {}
-        if cycle_pk:
-            kwargs['pk'] = cycle_pk
-        else:
-            kwargs['ordinal'] = current_cycle.ordinal + 1
+            kwargs = {}
+            if cycle_pk:
+                kwargs['pk'] = cycle_pk
+            else:
+                kwargs['ordinal'] = current_cycle.ordinal + 1
 
-        cycle = Cycle.objects.filter(**kwargs)
+            cycle = Cycle.objects.filter(**kwargs)
 
-        if not student or not cycle.exists():
-            response = JsonResponse({
-                    'error': 'Provide existing student code or cycle name'
-                }, status=500)
-            return response
+            if not student or not cycle.exists():
+                response = JsonResponse({
+                        'error': 'Provide existing student code or cycle name'
+                    }, status=500)
+                return response
 
-        cycle = cycle.first()
+            cycle = cycle.first()
 
-        if student.current_cycle.ordinal == cycle.ordinal - 1:
-            student.pre_registered = enrolled_in_odoo
-            _add_success_partner(student_client_id, enrolled_in_odoo)
+            if student.current_cycle.ordinal == cycle.ordinal - 1:
+                student.pre_registered = enrolled_in_odoo
+                _add_success_partner(student_client_id, enrolled_in_odoo)
 
-        elif student.current_cycle.ordinal < cycle.ordinal and enrolled_in_odoo:
-            rel = StudentProfileCycle.objects.filter(student_profile=student, cycle=cycle)
-            if not rel.exists():
-                new_student_cycle = StudentProfileCycle(
-                    student_profile=student,
-                    cycle=cycle)
-                new_student_cycle.save()
-            if not student.user.is_active:
-                student.user.is_active = True
-            _add_success_partner(student_client_id, enrolled_in_odoo)
+            elif student.current_cycle.ordinal < cycle.ordinal and enrolled_in_odoo:
+                rel = StudentProfileCycle.objects.filter(student_profile=student, cycle=cycle)
+                if not rel.exists():
+                    new_student_cycle = StudentProfileCycle(
+                        student_profile=student,
+                        cycle=cycle)
+                    new_student_cycle.save()
+                if not student.user.is_active:
+                    student.user.is_active = True
+                _add_success_partner(student_client_id, enrolled_in_odoo)
 
-        elif student.current_cycle.ordinal < cycle.ordinal and not enrolled_in_odoo:
-            rel = StudentProfileCycle.objects.filter(student_profile=student, cycle=cycle)
-            if rel.exists():
-                rel = rel.first()
-                rel.delete()
-            student.user.is_active = False
-            _add_success_partner(student_client_id, enrolled_in_odoo)
+            elif student.current_cycle.ordinal < cycle.ordinal and not enrolled_in_odoo:
+                rel = StudentProfileCycle.objects.filter(student_profile=student, cycle=cycle)
+                if rel.exists():
+                    rel = rel.first()
+                    rel.delete()
+                student.user.is_active = False
+                _add_success_partner(student_client_id, enrolled_in_odoo)
 
-        else:
-            student.user.is_active = enrolled_in_odoo
-            student.pre_registered = enrolled_in_odoo
-            _add_success_partner(student_client_id, enrolled_in_odoo)
+            else:
+                student.user.is_active = enrolled_in_odoo
+                student.pre_registered = enrolled_in_odoo
+                _add_success_partner(student_client_id, enrolled_in_odoo)
 
-        student.user.save()
-        student.save()
+            student.user.save()
+            student.save()
 
-    return JsonResponse({ 'message': 'done!', 'partners': success_partners }, status=200)
+        return JsonResponse({ 'message': 'done!', 'partners': success_partners }, status=200)
 
 
 def _get_student(student_client_id):
