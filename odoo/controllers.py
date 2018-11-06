@@ -35,6 +35,7 @@ from cycle.models import Cycle
 from integrations.models import Integration, IntegrationConfig
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from pprint import pprint
 '''
 integration configurations keys:
 
@@ -342,67 +343,101 @@ def enroll_or_unenroll_student(request):
     data = request.data.get('data', [])
     success_partners = []
 
-    def _add_success_partner(id, enrolled):
+    def _add_success_partner(id, enrolled, is_contact_odoo, cycle_pk):
         success_partners.append({
             'id': id,
-            'registered': enrolled
+            'registered': enrolled,
+            'is_contact_odoo': is_contact_odoo,
+            'cycle_id': cycle_pk
         })
 
-    with transaction.atomic():
-        for enroll in data:
-            cycle_pk = enroll['cycle_pk']
-            student_client_id = enroll['student_client_id']
-            enrolled_in_odoo = enroll['is_enrolled']
-            student = _get_student(student_client_id)
+    def _generate_key_rel(code, cycle_pk):
+        return 'code-{}---cycke_pk-{}'.format(code, cycle_pk)
 
-            kwargs = {}
-            if cycle_pk:
-                kwargs['pk'] = cycle_pk
+    student_data = {}
+    cycles_dic = {}
+
+    for odoo_user in data:
+        cycle_pk = odoo_user.get('cycle_pk')
+
+        if cycle_pk not in cycles_dic:
+            cycle = Cycle.objects.filter(pk=cycle_pk)
+            if cycle.exists():
+                cycles_dic.update(dict([(cycle_pk, cycle.first())]))
             else:
-                kwargs['ordinal'] = current_cycle.ordinal + 1
-
-            cycle = Cycle.objects.filter(**kwargs)
-
-            if not student or not cycle.exists():
                 response = JsonResponse({
-                        'error': 'Provide existing student code or cycle name'
+                        'error': 'Provide existing cycle pk {}'.format(cycle_pk)
                     }, status=500)
                 return response
 
-            cycle = cycle.first()
+        odoo_user['cycle'] = cycles_dic[cycle_pk]
 
-            if student.current_cycle.ordinal == cycle.ordinal - 1:
-                student.pre_registered = enrolled_in_odoo
-                _add_success_partner(student_client_id, enrolled_in_odoo)
+        key = odoo_user.get('student_code')
+        if key in student_data:
+            student_data[key].append(odoo_user)
+        else:
+            student_data[key] = [odoo_user]
+        
+        student_data[key].sort(key=lambda user: user['cycle'].ordinal)
 
-            elif student.current_cycle.ordinal < cycle.ordinal and enrolled_in_odoo:
-                rel = StudentProfileCycle.objects.filter(student_profile=student, cycle=cycle)
-                if not rel.exists():
-                    new_student_cycle = StudentProfileCycle(
-                        student_profile=student,
-                        cycle=cycle)
-                    new_student_cycle.save()
-                if not student.user.is_active:
-                    student.user.is_active = True
-                _add_success_partner(student_client_id, enrolled_in_odoo)
 
-            elif student.current_cycle.ordinal < cycle.ordinal and not enrolled_in_odoo:
-                rel = StudentProfileCycle.objects.filter(student_profile=student, cycle=cycle)
-                if rel.exists():
-                    rel = rel.first()
-                    rel.delete()
-                student.user.is_active = False
-                _add_success_partner(student_client_id, enrolled_in_odoo)
+    students = StudentProfile.objects.filter(
+        code__in=[code for code in student_data.iterkeys()]
+    ).select_related('current_cycle', 'user')
 
-            else:
-                student.user.is_active = enrolled_in_odoo
-                student.pre_registered = enrolled_in_odoo
-                _add_success_partner(student_client_id, enrolled_in_odoo)
+    students_cycle_rel = StudentProfileCycle.objects.filter(
+        student_profile__code__in=[code for code in student_data.iterkeys()],
+        cycle__in=[cycle for cycle in cycles_dic.itervalues()]).values_list('student_profile__code', 'cycle__pk')
+
+    students_cycle_rel_dict = {}
+    for rel in students_cycle_rel:
+        key = _generate_key_rel(rel[0], rel[1])
+
+        if key not in students_cycle_rel_dict:
+            students_cycle_rel_dict[key] = True
+
+    with transaction.atomic():
+        for student in students:
+            for odoo_user in student_data.get(student.code, []):
+                cycle = odoo_user.get('cycle')
+                enrolled_in_odoo = odoo_user.get('is_enrolled')
+                student_client_id = odoo_user.get('student_client_id')
+                is_contact_odoo = odoo_user.get('is_contact_odoo', False)
+                cycle_pk = cycle.pk
+
+                if student.current_cycle.ordinal == cycle.ordinal - 1:
+                    student.pre_registered = enrolled_in_odoo
+                    _add_success_partner(student_client_id, enrolled_in_odoo, is_contact_odoo, cycle_pk)
+
+                elif student.current_cycle.ordinal < cycle.ordinal and enrolled_in_odoo:
+                    key = _generate_key_rel(student.code, cycle.pk)
+                    if key not in students_cycle_rel_dict:
+                        new_student_cycle = StudentProfileCycle(
+                            student_profile=student,
+                            cycle=cycle)
+                        new_student_cycle.save()
+                    if not student.user.is_active:
+                        student.user.is_active = True
+                    _add_success_partner(student_client_id, enrolled_in_odoo, is_contact_odoo, cycle_pk)
+
+                elif student.current_cycle.ordinal < cycle.ordinal and not enrolled_in_odoo:
+                    key = _generate_key_rel(student.code, cycle.pk)
+                    if key in students_cycle_rel_dict:
+                        rel = StudentProfileCycle.objects.filter(student_profile=student, cycle=cycle)
+                        rel = rel.first()
+                        rel.delete()
+                    student.user.is_active = False
+                    _add_success_partner(student_client_id, enrolled_in_odoo, is_contact_odoo, cycle_pk)
+
+                else:
+                    student.user.is_active = enrolled_in_odoo
+                    student.pre_registered = enrolled_in_odoo
+                    _add_success_partner(student_client_id, enrolled_in_odoo, is_contact_odoo, cycle_pk)
 
             student.user.save()
             student.save()
 
-        return JsonResponse({ 'message': 'done!', 'partners': success_partners }, status=200)
+    return JsonResponse({ 'message': 'done!', 'partners': success_partners }, status=200)
 
 
 def _get_student(student_client_id):
