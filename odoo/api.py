@@ -661,7 +661,7 @@ def register_client(
             models.execute_kw(db, uid, password, 'res.partner', 'write', [
                 [student_id],
                 {
-                    'ref': student_profile.code,
+                    'ref': '{}'.format(instance_prefix, student_profile.code)
                     'name': '{0}, {1}'.format(
                         student_profile.user.first_name.encode('utf-8'),
                         student_profile.user.last_name.encode('utf-8')
