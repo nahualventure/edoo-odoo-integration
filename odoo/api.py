@@ -557,8 +557,6 @@ def register_client(
             [[['id', '=', student_id]]],
             {'limit': 1}
         )
-        
-        print student
 
         if len(student) != 1:
             raise Exception('No client found for id ' + str(student_id))
@@ -566,7 +564,7 @@ def register_client(
         student = student[0]
 
         # Check if family has changed for the student
-        if student['parent_id'][0] != family_id:
+        if student['parent_id'] and student['parent_id'][0] != family_id:
             # Get family partner because we need its current 'ref'.
             old_family = models.execute_kw(db, uid, password,
                 'res.partner', 'search_read',
