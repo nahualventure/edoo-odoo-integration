@@ -40,19 +40,12 @@ def post_client(data):
     uid = services.authenticate_user(url, db, username, password)
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
-    odoo_client_id = models.execute_kw(db, uid, password,
-        'res.partner', 'create',
-        [{
-            'name': data['name'],
-        }]
+    partner = models.execute_kw(
+        db, uid, password, 'edoo.api.integration',
+        'post_client', [{ 'name': data.get('name') }]
     )
 
-    odoo_client = models.execute_kw(db, uid, password,
-        'res.partner', 'search_read',
-        [[['id', '=', odoo_client_id]]]
-    )
-
-    return odoo_client[0]
+    return partner
 
 
 def get_client(client_id):
@@ -393,75 +386,34 @@ def get_account_statement_legacy(client_id, comercial_id, filters):
 
     return transactions_by_company
 
-
 def search_clients(query):
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
-    partners = models.execute_kw(db, uid, password,
-        'res.partner', 'search_read',
-        [[
-            '|',
-            ['ref', 'ilike', query],
-            ['name', 'ilike', query],
-            ['child_ids', '!=', False]
-        ]]
+    partners = models.execute_kw(
+        db, uid, password, 'edoo.api.integration',
+        'search_clients', [{ 'word': query }]
     )
-
-    partner_ids = list(map(lambda x: int(x['id']), partners))
-
-    comercial_partners = models.execute_kw(db, uid, password,
-        'res.partner', 'search_read',
-        [[['parent_id', 'in', partner_ids], ['type', '=', 'invoice']]]
-    )
-
-    result = []
 
     for partner in partners:
-        # Look for comercial partner
-
-        # Logic 1
-        cm = next((x for x in comercial_partners if x['parent_id'][0] == partner['id']), None)
-
-        # Logic 2
-        # cm = None
-        # for comercial_partner in comercial_partners:
-        #     if comercial_partner['parent_id'][0] == partner['id']:
-        #         cm = comercial_partner
-        #         break
-
-        addresses = [cm['street'], cm['street2'], cm['city']] if cm else []
-
-        client_object = {
+        partner.update({
             'display_as': 'user',
-            'client_id': partner['id'],
-            'client_name': partner['name'],
-            'client_ref': partner['ref'],
-            'comercial_id': cm['id'] if cm else None,
-            'comercial_name': cm['name'] if cm else None,
-            'comercial_number': cm['vat'] if (cm and cm['vat']) else None,
-            'comercial_address': " ".join(address for address in addresses if address),
-            'comercial_email': cm['email'] if (cm and cm['email']) else None,
+            'role': 'Cliente registrado',
             'profile_picture': Odoo.DEFAULT_AVATAR,
-            'first_name': partner['name'],
-            'role': "Cliente registrado"
-        }
-
-        result.append(client_object)
-
-    return result
-
+        })
+    
+    return partners
 
 def register_client(
-        student_client_id='',
+        student_client_id=False,
         student_profile=None,
         student_tutors=[],
-        client_id='',
+        client_id=False,
         client_name='',
         client_ref='',
-        comercial_id='',
+        comercial_id=False,
         comercial_address='',
         comercial_number='',
         comercial_name='',
@@ -471,282 +423,81 @@ def register_client(
     student_client_id: student id, odoo contact child level
     comercial_id: family comercial id, odoo contact child level
     """
-    url, db, username, password = get_odoo_settings()
+    student_client_id = student_client_id or False
+    client_id = client_id or False
+    comercial_id = comercial_id or False
 
+    url, db, username, password = get_odoo_settings()
     uid = services.authenticate_user(url, db, username, password)
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
-    # Setup codes
+    company_id = Odoo.CUSTOM_SETTINGS['company_pk']
+
     instance_prefix = Odoo.CUSTOM_SETTINGS['instance_prefix']
     family_code_prefix = Odoo.CUSTOM_SETTINGS['family_code_prefix']
     comercial_code_sufix = Odoo.CUSTOM_SETTINGS['comercial_code_sufix']
 
     family_code = instance_prefix + family_code_prefix + client_ref
-    family_name = client_name
     comercial_code = instance_prefix + family_code_prefix + client_ref + comercial_code_sufix
 
-    tutors_emails = map(lambda x: x.user.email, student_tutors) if student_tutors else []
+    res = models.execute_kw(
+        db, uid, password, 'edoo.api.integration',
+        'register_client', [{
+            'family': {
+                'id': client_id,
+                'emails': [tutor.user.email for tutor in student_tutors],
+                'company_id': company_id,
+                'name': client_name.encode('utf-8'),
+                'ref': family_code
+            },
 
-    # Fallback for None type
-    student_profile.user.first_name = student_profile.user.first_name or ''
-    student_profile.user.last_name = student_profile.user.last_name or ''
-
-    # -------- Family contact --------
-
-    # Update family contact
-    if client_id:
-        family_id = client_id
-        models.execute_kw(db, uid, password, 'res.partner', 'write', [
-            [family_id],
-            {
-                'email': ",".join(tutors_emails)
-            }
-        ])
-    # Create family contact
-    else:
-        family_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
-            'ref': family_code.encode('utf-8'),
-            'name': family_name.encode('utf-8'),
-            'email': ",".join(tutors_emails),
-            'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
-        }])
-
-    # -------- Family comercial contact --------
-
-    # Update family comercial contact
-    if comercial_id:
-        family_comercial_id = comercial_id
-        models.execute_kw(db, uid, password, 'res.partner', 'write', [
-            [family_comercial_id],
-            {
-                'street': comercial_address.encode('utf-8'),
+            'commercial_contact': {
+                'id': comercial_id,
+                'ref': comercial_code,
+                'address': comercial_address.encode('utf-8'),
                 'vat': comercial_number,
                 'name': comercial_name.encode('utf-8'),
                 'email': comercial_email,
-                'parent_id': family_id,
-                'type': 'invoice'
-            }
-        ])
-    # Create family comercial contact
-    else:
-        family_comercial_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
-            'ref': comercial_code,
-            'street': comercial_address.encode('utf-8'),
-            'vat': comercial_number,
-            'name': comercial_name.encode('utf-8'),
-            'email': comercial_email,
-            'parent_id': family_id,
-            'type': 'invoice',
-            'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
-        }])
+                'parent_id': client_id,
+                'type': 'invoice',
+                'company_id': company_id
+            },
 
-    # Update 'vat' separately because it is not set during creation.
-    # TODO: Fix this issue in Odoo.
-    models.execute_kw(db, uid, password, 'res.partner', 'write', [
-        [family_comercial_id],
-        { 'vat': comercial_number }
-    ])
-
-    # -------- Student contact --------
-
-    # Reasign family if student_client_id exists
-    if student_client_id:
-        student_id = student_client_id
-        student = models.execute_kw(db, uid, password,
-            'res.partner', 'search_read',
-            [[['id', '=', student_id]]],
-            {'limit': 1}
-        )
-
-        if len(student) != 1:
-            raise Exception('No client found for id ' + str(student_id))
-
-        student = student[0]
-
-        # Check if family has changed for the student
-        if student['parent_id'] and student['parent_id'][0] != family_id:
-            # Get family partner because we need its current 'ref'.
-            old_family = models.execute_kw(db, uid, password,
-                'res.partner', 'search_read',
-                [[['id', '=', student['parent_id'][0]]]],
-                {'limit': 1, 'fields': ['ref']}
-            )
-            old_family = old_family[0]
-
-            # Get family comercial partner because we need its current 'ref'.
-            old_comercial_partner = models.execute_kw(db, uid, password,
-                'res.partner', 'search_read',
-                [[['parent_id', '=', old_family['id']], ['type', '=', 'invoice']]],
-                {'limit': 1, 'fields': ['ref']}
-            )
-
-            if len(old_comercial_partner) != 1:
-                raise Exception('No comercial partner found for client ' + str(old_family['id']))
-
-            old_comercial_partner = old_comercial_partner[0]
-
-            # If student_id was used, it will have associated invoices
-            invoice_count = models.execute_kw(db, uid, password,
-                'account.invoice', 'search_count',
-                [[['partner_shipping_id', '=', student_id], ['state', 'in', ['open','paid']]]]
-            )
-
-            # Archive student
-            if invoice_count:
-                models.execute_kw(db, uid, password, 'res.partner', 'write', [
-                    [student_id],
-                    {
-                        'ref': (student['ref'] or '') + 'INACTIVE',
-                        'active': False
-                    }
-                ])
-            # Unlink student
-            else:
-                models.execute_kw(db, uid, password, 'res.partner', 'unlink', [
-                    [student_id]
-                ])
-
-            family_students_count = models.execute_kw(db, uid, password,
-                'res.partner', 'search_count',
-                [[['parent_id', '=', old_family['id']], ['type', '=', 'contact']]]
-            )
-
-            # Family doesn't have more students
-            if not family_students_count:
-                account_move_lines_count = models.execute_kw(db, uid, password,
-                    'account.move.line', 'search_count',
-                    [[['partner_id', '=', old_family['id']]]]
-                )
-
-                # Archive family and comercial partner
-                if account_move_lines_count:
-                    # Disable family partner
-                    models.execute_kw(db, uid, password, 'res.partner', 'write', [
-                        [old_family['id']],
-                        {
-                            'ref': (old_family['ref'] or '') + 'INACTIVE',
-                            'active': False
-                        }
-                    ])
-
-                    # Disable family comercial partner
-                    models.execute_kw(db, uid, password, 'res.partner', 'write', [
-                        [old_comercial_partner['id']],
-                        {
-                            'ref': (old_comercial_partner['ref'] or '') + 'INACTIVE',
-                            'active': False
-                        }
-                    ])
-                # Unlink family and comercial partner
-                else:
-                    models.execute_kw(db, uid, password, 'res.partner', 'unlink', [
-                        [old_family['id'], old_comercial_partner['id']]
-                    ])
-
-            # Create new student with new family
-            student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
-                'ref': instance_prefix + student_profile.code,
-                'name': '{0}, {1}'.format(
+            'student': {
+                'id': student_client_id,
+                'ref': '{}{}'.format(instance_prefix, student_profile.code),
+                'name': '{} {}'.format(
                     student_profile.user.first_name.encode('utf-8'),
                     student_profile.user.last_name.encode('utf-8')
                 ),
                 'email': student_profile.user.email,
-                'parent_id': family_id,
-                'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
-            }])
-        # Update student contact
-        else:
-            models.execute_kw(db, uid, password, 'res.partner', 'write', [
-                [student_id],
-                {
-                    'ref': '{}{}'.format(instance_prefix, student_profile.code),
-                    'name': '{0}, {1}'.format(
-                        student_profile.user.first_name.encode('utf-8'),
-                        student_profile.user.last_name.encode('utf-8')
-                    ),
-                    'email': student_profile.user.email
-                }
-            ])
-    # Create student contact
-    else:
-        student_id = models.execute_kw(db, uid, password, 'res.partner', 'create', [{
-            'ref': instance_prefix + student_profile.code,
-            'name': '{0}, {1}'.format(
-                student_profile.user.first_name.encode('utf-8'),
-                student_profile.user.last_name.encode('utf-8')
-            ),
-            'email': student_profile.user.email,
-            'parent_id': family_id,
-            'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
-        }])
-
-
-    # Response
-    client_id = student_id
-    payment_responsable_client_id = family_id
-    payment_responsable_comercial_id = family_comercial_id
-
-    return (
-        client_id,
-        payment_responsable_client_id,
-        payment_responsable_comercial_id
+                'parent_id': client_id,
+                'company_id': company_id
+            }
+        }]
     )
 
+    return (
+        res.get('client_id'),
+        res.get('payment_responsable_client_id'),
+        res.get('payment_responsable_comercial_id')
+    )
 
-def get_payment_responsable_data(client_id):
+def get_payment_responsable_data(family_id):
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
-    partner = models.execute_kw(db, uid, password,
-        'res.partner', 'search_read',
-        [[['id', '=', client_id]]],
-        {'limit': 1}
+    result = models.execute_kw(
+        db, uid, password, 'edoo.api.integration',
+        'get_payment_responsable_data', [{ 'parent_id': family_id }]
     )
 
-    if len(partner) != 1:
-        raise Exception('No client found for id ' + str(client_id))
-
-    partner = partner[0]
-
-    comercial_partners = models.execute_kw(db, uid, password,
-        'res.partner', 'search_read',
-        [[['parent_id', '=', partner['id']], ['type', '=', 'invoice']]]
-    )
-
-    # A client must have one comercial partner
-    if len(comercial_partners) == 0:
-        raise Exception('No comercial partner found for client ' + str(client_id))
-    elif len(comercial_partners) > 1:
-        raise Exception('More than one comercial partner found for client ' + str(client_id))
-
-    comercial_partner = comercial_partners[0]
-
-    addresses = [
-        comercial_partner['street'],
-        comercial_partner['street2'],
-        comercial_partner['city']
-    ]
-
-    payment_responsable_client_id = client_id
-    payment_responsable_comercial_id = comercial_partner['id']
-    payment_responsable_comercial_name = comercial_partner['name']
-    payment_responsable_comercial_number = comercial_partner['vat'] or ''
-    payment_responsable_comercial_address = " ".join(address for address in addresses if address)
-    payment_responsable_comercial_email = comercial_partner['email'] or ''
-
-    return {
+    result.update({
         'display_as': 'user',
-        'client_id': payment_responsable_client_id,
-        'client_name': partner['name'],
-        'client_ref': partner['ref'],
-        'comercial_id': payment_responsable_comercial_id,
-        'comercial_name': payment_responsable_comercial_name,
-        'comercial_number': payment_responsable_comercial_number,
-        'comercial_address': payment_responsable_comercial_address,
-        'comercial_email': payment_responsable_comercial_email,
-        'profile_picture': Odoo.DEFAULT_AVATAR,
-        'first_name': partner['name'],
-        'role': "Cliente registrado"
-    }
+        'role': 'Cliente registrado',
+        'profile_picture': Odoo.DEFAULT_AVATAR
+    })
+
+    return result
