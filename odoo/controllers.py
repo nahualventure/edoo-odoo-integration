@@ -166,7 +166,8 @@ def register_student(request, request_data, student_id, edition=False):
         (
             client_id,
             payment_responsable_client_id,
-            payment_responsable_comercial_id
+            payment_responsable_comercial_id,
+            new_student_code
         ) = services.register_client(
             student_client_id,
             student_profile,
@@ -180,6 +181,10 @@ def register_student(request, request_data, student_id, edition=False):
             comercial_name,
             comercial_email
         )
+
+        if student_profile.code != new_student_code:
+            student_profile.code = new_student_code
+            student_profile.save()
 
         set_integration_configuration(
             integration_key='odoo',

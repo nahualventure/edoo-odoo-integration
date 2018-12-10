@@ -443,6 +443,7 @@ def register_client(
     res = models.execute_kw(
         db, uid, password, 'edoo.api.integration',
         'register_client', [{
+            'company_id': company_id,
             'family': {
                 'id': client_id,
                 'emails': [tutor.user.email for tutor in student_tutors],
@@ -472,7 +473,8 @@ def register_client(
                 ),
                 'email': student_profile.user.email,
                 'parent_id': client_id,
-                'company_id': company_id
+                'company_id': company_id,   
+                'level_id': student_profile.level.pk if student_profile.level else False
             }
         }]
     )
@@ -480,7 +482,8 @@ def register_client(
     return (
         res.get('client_id'),
         res.get('payment_responsable_client_id'),
-        res.get('payment_responsable_comercial_id')
+        res.get('payment_responsable_comercial_id'),
+        res.get('student_ref')
     )
 
 def get_payment_responsable_data(family_id):
