@@ -831,7 +831,8 @@ def register_client_legacy(
     return (
         client_id,
         payment_responsable_client_id,
-        payment_responsable_comercial_id
+        payment_responsable_comercial_id,
+        None
     )
 
 
