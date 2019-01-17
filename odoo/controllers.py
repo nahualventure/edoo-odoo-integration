@@ -182,7 +182,7 @@ def register_student(request, request_data, student_id, edition=False):
             comercial_email
         )
 
-        if student_profile.code != new_student_code:
+        if new_student_code and student_profile.code != new_student_code:
             student_profile.code = new_student_code
             student_profile.save()
 
