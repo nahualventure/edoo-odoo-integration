@@ -233,9 +233,13 @@ def register_student(request, request_data, student_id, edition=False):
         response.sets({
             'student_profile': student_profile,
             'student_tutors': student_tutors,
+            'user': student_profile.user,
+            'current_view': 'odoo',
+            'studentprofile': student_profile,
             'payment_configuration_form': payment_configuration_form,
             'permissions_formset': permissions_formset
         })
+
 
         # Return a redirect
         return ControllerResponse(
@@ -248,6 +252,9 @@ def register_student(request, request_data, student_id, edition=False):
     response.sets({
         'student_profile': student_profile,
         'student_tutors': student_tutors,
+        'user': student_profile.user,
+        'current_view': 'odoo',
+        'studentprofile': student_profile,
         'payment_configuration_form': payment_configuration_form,
         'permissions_formset': permissions_formset
     })
