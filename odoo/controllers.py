@@ -230,6 +230,13 @@ def register_student(request, request_data, student_id, edition=False):
         # Redirect where it comes from
         redirect = utilities.deduct_redirect_response(request, None)
 
+        response.sets({
+            'student_profile': student_profile,
+            'student_tutors': student_tutors,
+            'payment_configuration_form': payment_configuration_form,
+            'permissions_formset': permissions_formset
+        })
+
         # Return a redirect
         return ControllerResponse(
             request,
