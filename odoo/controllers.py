@@ -220,6 +220,13 @@ def register_student(request, request_data, student_id, edition=False):
         # Redirect where it comes from
         redirect = utilities.deduct_redirect_response(request, None)
 
+        response = ControllerResponse(
+            request,
+            _(u"Cliente registrado exitosamente en Odoo"),
+            message_position='default',
+            redirect='registration_backend_register_student' if not edition else redirect
+        )
+
         response.sets({
             'student_profile': student_profile,
             'student_tutors': student_tutors,
@@ -228,12 +235,7 @@ def register_student(request, request_data, student_id, edition=False):
         })
 
         # Return a redirect
-        return ControllerResponse(
-            request,
-            _(u"Cliente registrado exitosamente en Odoo"),
-            message_position='default',
-            redirect='registration_backend_register_student' if not edition else redirect
-        )
+        return response
 
     response.sets({
         'student_profile': student_profile,
