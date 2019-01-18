@@ -506,7 +506,7 @@ def register_client(
         student_tutors=[],
         client_id=False,
         client_name='',
-        client_ref='',
+        client_ref=False,
         comercial_id=False,
         comercial_address='',
         comercial_number='',
@@ -543,12 +543,7 @@ def register_client(
 
     company_id = Odoo.CUSTOM_SETTINGS['company_pk']
 
-    instance_prefix = Odoo.CUSTOM_SETTINGS['instance_prefix']
-    family_code_prefix = Odoo.CUSTOM_SETTINGS['family_code_prefix']
-    comercial_code_sufix = Odoo.CUSTOM_SETTINGS['comercial_code_sufix']
-
-    family_code = instance_prefix + family_code_prefix + client_ref
-    comercial_code = instance_prefix + family_code_prefix + client_ref + comercial_code_sufix
+    family_code = client_ref or False
 
     res = models.execute_kw(
         db, uid, password, 'edoo.api.integration',
@@ -564,7 +559,6 @@ def register_client(
 
             'commercial_contact': {
                 'id': comercial_id,
-                'ref': comercial_code,
                 'address': comercial_address.encode('utf-8'),
                 'vat': comercial_number,
                 'name': comercial_name.encode('utf-8'),
@@ -576,11 +570,8 @@ def register_client(
 
             'student': {
                 'id': student_client_id,
-                'ref': '{}{}'.format(instance_prefix, student_profile.code),
-                'name': '{} {}'.format(
-                    student_profile.user.first_name.encode('utf-8'),
-                    student_profile.user.last_name.encode('utf-8')
-                ),
+                'ref': student_profile.code,
+                'name': student_profile.user.formal_name.encode('utf-8'),
                 'email': student_profile.user.email,
                 'parent_id': client_id,
                 'company_id': company_id,   

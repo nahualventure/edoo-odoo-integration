@@ -148,19 +148,9 @@ def register_student(request, request_data, student_id, edition=False):
         comercial_number = payment_configuration_form.cleaned_data.get('comercial_number')
         client_id = payment_configuration_form.cleaned_data.get('client_id', None)
         client_name = payment_configuration_form.cleaned_data.get('client_name', None)
-        client_ref = payment_configuration_form.cleaned_data.get('client_ref', None)
+        client_ref = payment_configuration_form.cleaned_data.get('client_ref', False)
         comercial_name = payment_configuration_form.cleaned_data.get('comercial_name')
         comercial_email = payment_configuration_form.cleaned_data.get('comercial_email')
-
-        if not client_ref:
-            code_generator_string = get_integration_configuration(
-                integration_key='odoo',
-                object_instance=None,
-                key='code_generator',
-                default='lambda s: s.code'
-            )
-            code_generator = eval(code_generator_string)
-            client_ref = code_generator(student_profile)
 
         # Register client service consumption
         (
@@ -233,13 +223,9 @@ def register_student(request, request_data, student_id, edition=False):
         response.sets({
             'student_profile': student_profile,
             'student_tutors': student_tutors,
-            'user': student_profile.user,
-            'current_view': 'odoo',
-            'studentprofile': student_profile,
             'payment_configuration_form': payment_configuration_form,
             'permissions_formset': permissions_formset
         })
-
 
         # Return a redirect
         return ControllerResponse(
@@ -252,9 +238,6 @@ def register_student(request, request_data, student_id, edition=False):
     response.sets({
         'student_profile': student_profile,
         'student_tutors': student_tutors,
-        'user': student_profile.user,
-        'current_view': 'odoo',
-        'studentprofile': student_profile,
         'payment_configuration_form': payment_configuration_form,
         'permissions_formset': permissions_formset
     })
