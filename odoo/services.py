@@ -4,6 +4,14 @@ from django.conf import settings
 import xmlrpclib
 
 
+odoo_versions_updated = [
+    '10.0',
+]
+
+def _validate_version(version):
+    return version in odoo_versions_updated
+
+
 def create_client(data):
     try:
         response = api.post_client(data)

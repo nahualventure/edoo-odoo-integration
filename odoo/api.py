@@ -6,18 +6,11 @@ import xmlrpclib
 import time
 import services
 import json
+from services import odoo_versions_updated, _validate_version
 
 
 if not hasattr(settings, 'ODOO_SETTINGS'):
     raise Exception('No settings found for Odoo.')
-
-
-odoo_versions_updated = [
-    '10.0',
-]
-
-def _validate_version(version):
-    return version in odoo_versions_updated
 
 
 class Odoo:

@@ -38,6 +38,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from pprint import pprint
 import time
+from django.conf import settings
 
 '''
 integration configurations keys:
@@ -127,6 +128,7 @@ def registration(request, student_id):
 
 
 def register_student(request, request_data, student_id, edition=False):
+    odoo_version = settings.ODOO_SETTINGS.get('VERSION', False),
     # Get the student profile
     student_profile = StudentProfile.objects.get(id=student_id)
 
@@ -151,6 +153,16 @@ def register_student(request, request_data, student_id, edition=False):
         client_ref = payment_configuration_form.cleaned_data.get('client_ref', False)
         comercial_name = payment_configuration_form.cleaned_data.get('comercial_name')
         comercial_email = payment_configuration_form.cleaned_data.get('comercial_email')
+
+        if not client_ref and not services._validate_version(odoo_version):
+            code_generator_string = get_integration_configuration(
+                integration_key='odoo',
+                object_instance=None,
+                key='code_generator',
+                default='lambda s: s.code'
+            )
+            code_generator = eval(code_generator_string)
+            client_ref = code_generator(student_profile)
 
         # Register client service consumption
         (
