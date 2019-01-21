@@ -37,8 +37,7 @@ class Odoo:
 
 def post_client(data):
     url, db, username, password, version = get_odoo_settings()
-    from services import _validate_version
-    if not version or not _validate_version(version):
+    if not version or not services._validate_version(version):
         return post_client_legacy(data)
 
     uid = services.authenticate_user(url, db, username, password)
@@ -413,8 +412,7 @@ def get_account_statement_legacy(client_id, comercial_id, filters):
 
 def search_clients(query):
     url, db, username, password, version = get_odoo_settings()
-    from services import _validate_version
-    if not version or not _validate_version(version):
+    if not version or not services._validate_version(version):
         return search_clients_legacy(query)
 
     uid = services.authenticate_user(url, db, username, password)
@@ -513,8 +511,7 @@ def register_client(
     """
     url, db, username, password, version = get_odoo_settings()
 
-    from services import _validate_version
-    if not version or not _validate_version(version):
+    if not version or not services._validate_version(version):
         return register_client_legacy(
             student_client_id,
             student_profile,
@@ -825,8 +822,7 @@ def register_client_legacy(
 def get_payment_responsable_data(family_id):
     url, db, username, password, version = get_odoo_settings()
 
-    from services import _validate_version
-    if not version or not _validate_version(version):
+    if not version or not services._validate_version(version):
         return get_payment_responsable_data_legacy(family_id)
 
     uid = services.authenticate_user(url, db, username, password)
