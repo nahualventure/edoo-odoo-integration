@@ -6,7 +6,6 @@ import xmlrpclib
 import time
 import services
 import json
-from services import odoo_versions_updated, _validate_version
 
 
 if not hasattr(settings, 'ODOO_SETTINGS'):
@@ -38,6 +37,7 @@ class Odoo:
 
 def post_client(data):
     url, db, username, password, version = get_odoo_settings()
+    from services import _validate_version
     if not version or not _validate_version(version):
         return post_client_legacy(data)
 
@@ -413,6 +413,7 @@ def get_account_statement_legacy(client_id, comercial_id, filters):
 
 def search_clients(query):
     url, db, username, password, version = get_odoo_settings()
+    from services import _validate_version
     if not version or not _validate_version(version):
         return search_clients_legacy(query)
 
@@ -512,6 +513,7 @@ def register_client(
     """
     url, db, username, password, version = get_odoo_settings()
 
+    from services import _validate_version
     if not version or not _validate_version(version):
         return register_client_legacy(
             student_client_id,
@@ -822,6 +824,8 @@ def register_client_legacy(
 
 def get_payment_responsable_data(family_id):
     url, db, username, password, version = get_odoo_settings()
+
+    from services import _validate_version
     if not version or not _validate_version(version):
         return get_payment_responsable_data_legacy(family_id)
 
