@@ -151,6 +151,7 @@ def get_payment_responsable_data(client_id):
 
 odoo_versions_updated = [
     '10.0',
+    '12.0',
 ]
 
 def _validate_version(version):

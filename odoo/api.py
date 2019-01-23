@@ -510,6 +510,7 @@ def register_client(
     comercial_id: family comercial id, odoo contact child level
     """
     url, db, username, password, version = get_odoo_settings()
+    print version, type(version)
 
     if not version or not services._validate_version(version):
         return register_client_legacy(

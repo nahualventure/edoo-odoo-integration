@@ -128,7 +128,7 @@ def registration(request, student_id):
 
 
 def register_student(request, request_data, student_id, edition=False):
-    odoo_version = settings.ODOO_SETTINGS.get('VERSION', False),
+    odoo_version = settings.ODOO_SETTINGS.get('VERSION', False)
     # Get the student profile
     student_profile = StudentProfile.objects.get(id=student_id)
 
