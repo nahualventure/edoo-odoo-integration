@@ -81,18 +81,27 @@ def registration(request, student_id):
 
     payment_configuration_form = PaymentResponsableConfigurationForm()
     res_data = None
-    if payment_responsable_client_id != False:
-        res_data = services.get_payment_responsable_data(payment_responsable_client_id)
-        payment_configuration_form = PaymentResponsableConfigurationForm(initial={
-            'student_client_id': student_client_id,
-            'client_id': res_data['client_id'],
-            'client_name': res_data['client_name'],
-            'client_ref': res_data['client_ref'],
-            'comercial_id': res_data['comercial_id'],
-            'comercial_name': res_data['comercial_name'],
-            'comercial_number': res_data['comercial_number'],
-            'comercial_address': res_data['comercial_address']
-        })
+    error = False
+    error_description = ''
+
+    if payment_responsable_client_id:
+        try:
+            res_data = services.get_payment_responsable_data(payment_responsable_client_id)
+        except:
+            error = True
+            error_description = 'El cliente de Odoo no existe o ha sido eliminado. Por favor, créalo nuevamente'
+
+        if res_data:
+            payment_configuration_form = PaymentResponsableConfigurationForm(initial={
+                'student_client_id': student_client_id,
+                'client_id': res_data['client_id'],
+                'client_name': res_data['client_name'],
+                'client_ref': res_data['client_ref'],
+                'comercial_id': res_data['comercial_id'],
+                'comercial_name': res_data['comercial_name'],
+                'comercial_number': res_data['comercial_number'],
+                'comercial_address': res_data['comercial_address']
+            })
 
     permissions_formset = TutorPermissionsFormset(initial=[
         {
@@ -121,7 +130,9 @@ def registration(request, student_id):
         'prefilled_result': res_data,
         'studentprofile': student_profile,
         'user': student_profile.user,
-        'current_view': 'odoo'
+        'current_view': 'odoo',
+        'error': error,
+        'error_description': error_description
     })
 
     return response
