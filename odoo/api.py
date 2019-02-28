@@ -570,7 +570,6 @@ def register_client(
             'level_id': student_profile.level.pk if student_profile.level else False
         }
     }
-    pprint(data)
 
     res = models.execute_kw(
         db, uid, password, 'edoo.api.integration',
@@ -583,7 +582,7 @@ def register_client(
             None,
             None,
             None,
-            res['errors']
+            res.get('errors')
         )
 
     return (
@@ -851,7 +850,7 @@ def get_payment_responsable_data(family_id):
         }]
     )
 
-    role = result['errors'] and 'Sin Cliente' or 'Cliente registrado'
+    role = result.get('errors') and 'Sin Cliente' or 'Cliente registrado'
 
     result.update({
         'display_as': 'user',
