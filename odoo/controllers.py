@@ -85,11 +85,15 @@ def registration(request, student_id):
 
     res_data = services.get_payment_responsable_data(payment_responsable_client_id or False)
 
+    student_type = res_data.get('management_type') == 'student'
+    client_name = student_type and student_profile.user.formal_name or None
+    client_ref = student_type and student_profile.code or None
+
     payment_configuration_form = PaymentResponsableConfigurationForm(initial={
         'student_client_id': student_client_id or None,
         'client_id': res_data['client_id'] or None,
-        'client_name': res_data['client_name'] or None,
-        'client_ref': res_data['client_ref'] or None,
+        'client_name': client_name if client_name else (res_data['client_name'] or None),
+        'client_ref': client_ref if client_ref else (res_data['client_ref'] or None),
         'comercial_id': res_data['comercial_id'] or None,
         'comercial_name': res_data['comercial_name'] or None,
         'comercial_number': res_data['comercial_number'] or None,

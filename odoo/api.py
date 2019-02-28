@@ -577,8 +577,6 @@ def register_client(
         'register_client', [data]
     )
 
-    print res
-
     if 'errors' in res:
         return (
             None,
