@@ -568,7 +568,9 @@ def register_client(
                 'email': student_profile.user.email,
                 'parent_id': client_id,
                 'company_id': company_id,   
-                'level_id': student_profile.level.pk if student_profile.level else False
+                'level_id': student_profile.level.pk if student_profile.level else False,
+                'section': student_profile.main_section(),
+                'cycle_id': StudentProfileCycle.objects.filter(student_profile=student_profile).order_by('cycle__ordinal').last().cycle.pk
             }
         }]
     )
