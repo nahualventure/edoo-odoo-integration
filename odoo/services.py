@@ -140,7 +140,7 @@ def register_client(
         )
     except requests.RequestException:
         print ("Error en el request")
-        return (None, None)
+        return (None, None, None, None, None)
 
 def get_payment_responsable_data(client_id):
     try:
