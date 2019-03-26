@@ -81,18 +81,24 @@ def registration(request, student_id):
 
     payment_configuration_form = PaymentResponsableConfigurationForm()
     res_data = None
-    if payment_responsable_client_id != False:
-        res_data = services.get_payment_responsable_data(payment_responsable_client_id)
-        payment_configuration_form = PaymentResponsableConfigurationForm(initial={
-            'student_client_id': student_client_id,
-            'client_id': res_data['client_id'],
-            'client_name': res_data['client_name'],
-            'client_ref': res_data['client_ref'],
-            'comercial_id': res_data['comercial_id'],
-            'comercial_name': res_data['comercial_name'],
-            'comercial_number': res_data['comercial_number'],
-            'comercial_address': res_data['comercial_address']
-        })
+    error_description = ''
+
+    res_data = services.get_payment_responsable_data(payment_responsable_client_id or False)
+
+    student_type = res_data.get('management_type') == 'student'
+    client_name = student_type and student_profile.user.formal_name or None
+    client_ref = student_type and student_profile.code or None
+
+    payment_configuration_form = PaymentResponsableConfigurationForm(initial={
+        'student_client_id': student_client_id or None,
+        'client_id': res_data['client_id'] or None,
+        'client_name': client_name if client_name else (res_data['client_name'] or None),
+        'client_ref': client_ref if client_ref else (res_data['client_ref'] or None),
+        'comercial_id': res_data['comercial_id'] or None,
+        'comercial_name': res_data['comercial_name'] or None,
+        'comercial_number': res_data['comercial_number'] or None,
+        'comercial_address': res_data['comercial_address'] or None,
+    })
 
     permissions_formset = TutorPermissionsFormset(initial=[
         {
@@ -118,10 +124,12 @@ def registration(request, student_id):
         'student_tutors': student_tutors,
         'payment_configuration_form': payment_configuration_form,
         'permissions_formset': permissions_formset,
-        'prefilled_result': res_data,
+        'prefilled_result': res_data['client_id'] and res_data or None,
         'studentprofile': student_profile,
         'user': student_profile.user,
-        'current_view': 'odoo'
+        'current_view': 'odoo',
+        'errors': res_data and res_data.get('errors', []) or [],
+        'management_type': res_data and res_data.get('management_type') or None
     })
 
     return response
@@ -169,7 +177,8 @@ def register_student(request, request_data, student_id, edition=False):
             client_id,
             payment_responsable_client_id,
             payment_responsable_comercial_id,
-            new_student_code
+            new_student_code,
+            errors
         ) = services.register_client(
             student_client_id,
             student_profile,
@@ -183,6 +192,24 @@ def register_student(request, request_data, student_id, edition=False):
             comercial_name,
             comercial_email
         )
+
+        if errors:
+            response = ControllerResponse(
+                request,
+                _(u"Mensaje de respuesta por defecto"),
+            )
+            response.sets({
+                'student_profile': student_profile,
+                'student_tutors': student_tutors,
+                'payment_configuration_form': PaymentResponsableConfigurationForm(),
+                'permissions_formset': TutorPermissionsFormset(),
+                'errors': errors,
+                'user': student_profile.user,
+                'current_view': 'odoo',
+                'prefilled_result': None,
+            })
+
+            return response
 
         if new_student_code and student_profile.code != new_student_code:
             student_profile.code = new_student_code

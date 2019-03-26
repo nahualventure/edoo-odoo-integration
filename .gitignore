@@ -102,3 +102,6 @@ forms.py
 # OS specific
 .DS_Store
 .thumbs
+
+# VS code
+/.vscode

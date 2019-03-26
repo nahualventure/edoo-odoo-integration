@@ -6,6 +6,7 @@ import xmlrpclib
 import time
 import services
 import json
+from pprint import pprint
 
 
 if not hasattr(settings, 'ODOO_SETTINGS'):
@@ -538,48 +539,62 @@ def register_client(
 
     family_code = client_ref or False
 
+    print student_profile.main_section
+
+    data = {
+        'company_id': company_id,
+        'family': {
+            'id': client_id,
+            'emails': [tutor.user.email for tutor in student_tutors],
+            'company_id': company_id,
+            'name': client_name.encode('utf-8'),
+            'ref': family_code
+        },
+
+        'commercial_contact': {
+            'id': comercial_id,
+            'address': comercial_address.encode('utf-8'),
+            'vat': comercial_number,
+            'name': comercial_name.encode('utf-8'),
+            'email': comercial_email,
+            'parent_id': client_id,
+            'type': 'invoice',
+            'company_id': company_id
+        },
+
+        'student': {
+            'id': student_client_id,
+            'ref': student_profile.code,
+            'name': student_profile.user.formal_name.encode('utf-8'),
+            'email': student_profile.user.email,
+            'parent_id': client_id,
+            'company_id': company_id,
+            'level_id': student_profile.level.pk if student_profile.level else False,
+            'section_name': student_profile.main_section,
+            'cycle_id': student_profile.studentprofilecycle_set.all().order_by('cycle__ordinal').last().cycle.pk,
+        }
+    }
+
     res = models.execute_kw(
         db, uid, password, 'edoo.api.integration',
-        'register_client', [{
-            'company_id': company_id,
-            'family': {
-                'id': client_id,
-                'emails': [tutor.user.email for tutor in student_tutors],
-                'company_id': company_id,
-                'name': client_name.encode('utf-8'),
-                'ref': family_code
-            },
-
-            'commercial_contact': {
-                'id': comercial_id,
-                'address': comercial_address.encode('utf-8'),
-                'vat': comercial_number,
-                'name': comercial_name.encode('utf-8'),
-                'email': comercial_email,
-                'parent_id': client_id,
-                'type': 'invoice',
-                'company_id': company_id
-            },
-
-            'student': {
-                'id': student_client_id,
-                'ref': student_profile.code,
-                'name': student_profile.user.formal_name.encode('utf-8'),
-                'email': student_profile.user.email,
-                'parent_id': client_id,
-                'company_id': company_id,   
-                'level_id': student_profile.level.pk if student_profile.level else False,
-                'section': student_profile.main_section(),
-                'cycle_id': StudentProfileCycle.objects.filter(student_profile=student_profile).order_by('cycle__ordinal').last().cycle.pk
-            }
-        }]
+        'register_client', [data]
     )
+
+    if 'errors' in res:
+        return (
+            None,
+            None,
+            None,
+            None,
+            res.get('errors')
+        )
 
     return (
         res.get('client_id'),
         res.get('payment_responsable_client_id'),
         res.get('payment_responsable_comercial_id'),
-        res.get('student_ref')
+        res.get('student_ref'),
+        None
     )
 
 def register_client_legacy(
@@ -833,12 +848,17 @@ def get_payment_responsable_data(family_id):
 
     result = models.execute_kw(
         db, uid, password, 'edoo.api.integration',
-        'get_payment_responsable_data', [{ 'parent_id': family_id }]
+        'get_payment_responsable_data', [{
+            'parent_id': family_id,
+            'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
+        }]
     )
+
+    role = result.get('errors') and 'Sin Cliente' or 'Cliente registrado'
 
     result.update({
         'display_as': 'user',
-        'role': 'Cliente registrado',
+        'role': role,
         'profile_picture': Odoo.DEFAULT_AVATAR
     })
 
