@@ -10,6 +10,11 @@ urlpatterns = [
         name='enroll_or_unenroll_student'
     ),
     url(
+        r'^synchronization/account-statements/$',
+        views.synchronization_account_statements,
+        name='synchronization_account_statements'
+    ),
+    url(
         r'^(?P<student_id>[\w.@+-]+)/registration/$',
         views.registration,
         name='odoo-registration'

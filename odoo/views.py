@@ -85,3 +85,16 @@ def enroll_or_unenroll_student(request):
     cr = controllers.enroll_or_unenroll_student(request)
 
     return cr
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def synchronization_account_statements(request):
+    """
+    Require: POST
+
+    """
+
+    cr = controllers.synchronization_account_statements(request)
+
+    return cr

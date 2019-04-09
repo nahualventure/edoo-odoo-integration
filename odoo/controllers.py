@@ -39,6 +39,7 @@ from django.db import transaction
 from pprint import pprint
 import time
 from django.conf import settings
+from school.models import School
 
 '''
 integration configurations keys:
@@ -552,3 +553,34 @@ def _get_student(student_client_id):
     config = IntegrationConfig.objects.get(key='client_id', value=student_client_id)
     content_type = ContentType.objects.get(pk=config.content_type.pk)
     return content_type.get_object_for_this_type(pk=config.object_id)
+
+def synchronization_account_statements(request_data):
+    data = request_data.data.get('data', [])
+    school = School.objects.first()
+
+    codes = []
+    for account_statement in data:
+        json_data = {
+            'name': account_statement.get('name', ''),
+            'code': account_statement.get('code', ''),
+            'ordinal': account_statement.get('ordinal', 0)
+        }
+
+        code = json_data['code']
+
+        config = set_integration_configuration(
+            integration_key='odoo',
+            object_instance=school,
+            key='account_statement_{}'.format(code),
+            value=code,
+            data=json_data
+        )
+
+        codes.append(code)
+
+    configs_to_delete = IntegrationConfig.objects.filter(
+        key__contains='account_statement_', integration__key='odoo'
+    ).exclude(value__in=codes)
+    configs_to_delete.delete()
+
+    return JsonResponse({ 'message': 'done!' }, status=200)
