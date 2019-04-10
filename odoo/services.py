@@ -3,6 +3,27 @@ import api
 from django.conf import settings
 import xmlrpclib
 
+class OdooAuthentication(object):
+    __instance = None
+
+    uid = host = database = username = password = None
+
+    def __init__(self, host, database, username, password):
+        self.host = host
+        self.database = database
+        self.username = username
+        self.password = password
+
+    def __new__(args, host, database, username, password):
+        if OdooAuthentication.__instance is None:
+            try:
+                common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(host))
+                OdooAuthentication.uid = common.authenticate(database, username, password, {})
+                OdooAuthentication.__instance = object.__new__(args)
+            except Exception as e:
+                raise e
+        return OdooAuthentication.__instance
+
 
 def create_client(data):
     try:
@@ -99,9 +120,8 @@ def set_discount(client_id, data):
 
 def authenticate_user(host, database, username, password):
     try:
-        common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(host))
-
-        return common.authenticate(database, username, password, {})
+        auth = OdooAuthentication(host, database, username, password)
+        return auth.uid
     except Exception as e:
         raise e
 
