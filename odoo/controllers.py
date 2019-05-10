@@ -562,6 +562,7 @@ def synchronization_account_statements(request_data):
     for account_statement in data:
         json_data = {
             'name': account_statement.get('name', ''),
+            'short_name': account_statement.get('short_name', ''),
             'code': account_statement.get('code', ''),
             'ordinal': account_statement.get('ordinal', 0)
         }

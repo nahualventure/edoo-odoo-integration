@@ -2,6 +2,9 @@ import services
 
 NAME = 'odoo'
 
+def get_account_statements(code=''):
+    return services.get_account_statements(code)
+
 
 def create_client(data):
     return services.create_client(data)
@@ -26,8 +29,8 @@ def call_discounts():
     return services.call_discounts()
 
 
-def call_account_statement(clients, data):
-    return services.call_account_statement(clients, data)
+def call_account_statement(clients, code):
+    return services.call_account_statement(clients, code)
 
 def call_account_statement_legacy(client_id, comercial_id, data):
     return services.call_account_statement_legacy(client_id, comercial_id, data)

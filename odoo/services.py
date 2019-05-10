@@ -25,6 +25,15 @@ class OdooAuthentication(object):
         return OdooAuthentication.__instance
 
 
+def get_account_statements(name=''):
+    from integrations.models import Integration, IntegrationConfig
+    from django.db.models.expressions import RawSQL
+
+    return IntegrationConfig.objects.filter(
+        key__contains='account_statement_'.format(name), integration__key='odoo'
+    ).order_by(RawSQL("data->>%s", ("ordinal",)))
+
+
 def create_client(data):
     try:
         response = api.post_client(data)
@@ -81,9 +90,9 @@ def call_discounts():
         return False, {}
 
 
-def call_account_statement(clients, data):
+def call_account_statement(clients, code):
     try:
-        response = api.get_account_statement(clients, data)
+        response = api.get_account_statement(clients, code)
 
         return response
     except requests.RequestException:

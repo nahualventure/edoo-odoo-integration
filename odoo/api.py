@@ -144,7 +144,7 @@ def get_allowed_invoice_journals():
 def get_allowed_payment_journals():
     return settings.ODOO_SETTINGS['ALLOWED_PAYMENT_JOURNALS']
 
-def get_account_statement(clients, filters):
+def get_account_statement(clients, code):
     url, db, username, password, version = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
@@ -155,9 +155,8 @@ def get_account_statement(clients, filters):
             'edoo.api.integration', 'get_account_statement',
                 [{
                     'clients': clients,
-                    'allowed_invoice_journals': get_allowed_invoice_journals(),
-                    'allowed_payment_journals': get_allowed_payment_journals(),
-                    'filters': filters
+                    'code': code,
+                    'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
                 }]
         )
 
