@@ -98,3 +98,17 @@ def synchronization_account_statements(request):
     cr = controllers.synchronization_account_statements(request)
 
     return cr
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@authentication_classes([])
+def school_management_type(request):
+    """
+    Require: POST
+
+    """
+
+    cr = controllers.synchronization_school_management_type(request)
+
+    return cr
+    

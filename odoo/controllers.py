@@ -65,13 +65,23 @@ def registration(request, student_id):
 
     response = ControllerResponse(request, _(u"Mensaje de respuesta por defecto"))
 
-    # Initial data
-    student_client_id = get_integration_configuration(
+    school = School.objects.first()
+    odoo_managment_type = get_integration_configuration(
         integration_key='odoo',
-        object_instance=student_profile,
-        key='client_id',
-        default=False
+        object_instance=school,
+        key='school_management_type',
     )
+
+    # Initial data
+    if odoo_managment_type == 'family':
+        student_client_id = get_integration_configuration(
+            integration_key='odoo',
+            object_instance=student_profile,
+            key='client_id',
+            default=False
+        )
+    else:
+        student_client_id = None
 
     payment_responsable_client_id = get_integration_configuration(
         integration_key='odoo',
@@ -150,6 +160,13 @@ def register_student(request, request_data, student_id, edition=False):
     payment_configuration_form = PaymentResponsableConfigurationForm(request_data)
     permissions_formset = TutorPermissionsFormset(request_data)
 
+    school = School.objects.first()
+    odoo_managment_type = get_integration_configuration(
+        integration_key='odoo',
+        object_instance=school,
+        key='school_management_type',
+    )
+
     if payment_configuration_form.is_valid() and permissions_formset.is_valid():
 
         # Billing data
@@ -177,7 +194,6 @@ def register_student(request, request_data, student_id, edition=False):
         (
             client_id,
             payment_responsable_client_id,
-            payment_responsable_comercial_id,
             new_student_code,
             errors
         ) = services.register_client(
@@ -216,25 +232,19 @@ def register_student(request, request_data, student_id, edition=False):
             student_profile.code = new_student_code
             student_profile.save()
 
-        set_integration_configuration(
-            integration_key='odoo',
-            object_instance=student_profile,
-            key='client_id',
-            value='{}'.format(client_id)
-        )
+        if odoo_managment_type == 'family':
+            set_integration_configuration(
+                integration_key='odoo',
+                object_instance=student_profile,
+                key='client_id',
+                value='{}'.format(client_id)
+            )
 
         set_integration_configuration(
             integration_key='odoo',
             object_instance=student_profile,
             key='payment_responsable_client_id',
             value='{}'.format(payment_responsable_client_id)
-        )
-
-        set_integration_configuration(
-            integration_key='odoo',
-            object_instance=student_profile,
-            key='payment_responsable_comercial_id',
-            value='{}'.format(payment_responsable_comercial_id)
         )
 
         # Save configuration for each tutor
@@ -553,6 +563,20 @@ def _get_student(student_client_id):
     config = IntegrationConfig.objects.get(key='client_id', value=student_client_id)
     content_type = ContentType.objects.get(pk=config.content_type.pk)
     return content_type.get_object_for_this_type(pk=config.object_id)
+
+def synchronization_school_management_type(request_data):
+    data = request_data.data.get('data', {})
+    school = School.objects.first()
+
+    config = set_integration_configuration(
+        integration_key='odoo',
+        object_instance=school,
+        key='school_management_type',
+        value=data.get('type', ''),
+    )
+
+    return JsonResponse({ 'message': 'done!' }, status=200)
+
 
 def synchronization_account_statements(request_data):
     data = request_data.data.get('data', [])
