@@ -133,7 +133,7 @@ def parse_account_statement_data(clients):
                     trans['balance_paid'] = invoice['balance_paid'] * -1 if invoice['amount_total_signed'] > 0 else invoice['balance_paid']
                 company_transactions.append(trans)
 
-            company_data['insolvent_company'] = insolvent_company or company_data['account_balance'] > 0.0
+            company_data['insolvent_company'] = insolvent_company or company_data['balance'] > 0.0
 
             # It multiplies by -1 because they subtract the salary.
             for payment in company_data.get('payments', []):
