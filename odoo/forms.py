@@ -31,10 +31,10 @@ class PaymentResponsableConfigurationForm(forms.Form):
     client_name = forms.CharField(required=True, label=_(u"ie. López Pérez"))
     client_ref = forms.CharField(required=False, label=_(u"Vacío para autogenerar"))
     comercial_id = forms.IntegerField(required=False, widget=forms.HiddenInput, initial=None)
-    comercial_name = forms.CharField(required=True, label=_(u"ie. Juan López"))
-    comercial_number = forms.CharField(required=True, label=_(u"ie. 11111111-1"))
-    comercial_address = forms.CharField(required=True, label=_(u"ie. Ciudad"))
-    comercial_email = forms.EmailField(required=True, label=_(u"ie. correo@email.com"))
+    comercial_name = forms.CharField(required=True, label=_(u"A nombre de"), widget=forms.TextInput(attrs={'placeholder': _(u"ie. Juan López")}))
+    comercial_number = forms.CharField(required=True, label=_(u"NIT"), widget=forms.TextInput(attrs={'placeholder': _(u"ie. 11111111-1")}))
+    comercial_address = forms.CharField(required=True, label=_(u"Dirección"), widget=forms.TextInput(attrs={'placeholder': _(u"ie. Ciudad")}))
+    comercial_email = forms.EmailField(required=True, label=_(u"Correo"), widget=forms.TextInput(attrs={'placeholder': _(u"ie. correo@email.com")}))
 
 
 class ContractForm(forms.Form):
