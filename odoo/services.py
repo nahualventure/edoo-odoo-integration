@@ -154,7 +154,8 @@ def parse_account_statement_data(clients):
                     'details': None,
                     'reconciled': True if (payment['state'] == 'reconciled') else False,
                     'payment_used': payment['payment_used'] or 0,
-                    'balance_paid': 0
+                    'balance_paid': 0,
+                    'state': payment['state']
                 }
                 company_transactions.append(new_payment)
 
@@ -203,9 +204,11 @@ def parse_account_statement_data(clients):
 
 def call_account_statement(clients, code):
     try:
-        response = parse_account_statement_data(
-            api.get_account_statement(clients, code)
-        )
+        response = api.get_account_statement(clients, code)
+        all_data = {
+            'data': parse_account_statement_data(response.get('data', [])),
+            'configs': response.get('configs', {})
+        }
 
         return response
     except requests.RequestException:
