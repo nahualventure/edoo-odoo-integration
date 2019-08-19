@@ -210,7 +210,7 @@ def call_account_statement(clients, code):
             'configs': response.get('configs', {})
         }
 
-        return response
+        return all_data
     except requests.RequestException:
         print ("Error en el request")
         return None
