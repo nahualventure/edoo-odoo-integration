@@ -196,6 +196,7 @@ def parse_account_statement_data(clients):
                 'invoice_phone': odoo_client['phone'],
                 'name': odoo_client['name'],
                 'email': odoo_client['email'],
+                'client_id': odoo_client['client_id']
             }
         })
 
