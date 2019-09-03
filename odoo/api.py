@@ -145,9 +145,11 @@ def search_clients(query):
     uid = services.authenticate_user(url, db, username, password)
     models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
+    company_id = Odoo.CUSTOM_SETTINGS['company_pk']
+
     partners = models.execute_kw(
         db, uid, password, 'edoo.api.integration',
-        'search_clients', [{ 'word': query }]
+        'search_clients', [{ 'word': query, 'company_id': company_id }]
     )
 
     for partner in partners:
