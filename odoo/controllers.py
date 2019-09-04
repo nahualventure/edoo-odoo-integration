@@ -157,7 +157,7 @@ def register_student(request, request_data, student_id, edition=False):
 
     response = ControllerResponse(request, _(u"Mensaje de respuesta por defecto"))
 
-    payment_configuration_form = PaymentResponsableConfigurationForm(request_data)
+    payment_configuration_form = PaymentResponsableConfigurationForm(data=request_data)
     permissions_formset = TutorPermissionsFormset(request_data)
 
     school = School.objects.first()
@@ -208,6 +208,13 @@ def register_student(request, request_data, student_id, edition=False):
             comercial_number,
             comercial_name,
             comercial_email
+        )
+
+        print (
+            client_id,
+            payment_responsable_client_id,
+            new_student_code,
+            errors
         )
 
         if errors:
@@ -286,6 +293,9 @@ def register_student(request, request_data, student_id, edition=False):
 
         # Return a redirect
         return response
+    else:
+        print(payment_configuration_form.errors)
+        print(permissions_formset.errors)
 
     response.sets({
         'student_profile': student_profile,
