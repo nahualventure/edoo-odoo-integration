@@ -90,7 +90,6 @@ def registration(request, student_id):
         default=False
     )
 
-    payment_configuration_form = PaymentResponsableConfigurationForm()
     res_data = None
     error_description = ''
 
@@ -109,6 +108,7 @@ def registration(request, student_id):
         'comercial_name': res_data['comercial_name'] or None,
         'comercial_number': res_data['comercial_number'] or None,
         'comercial_address': res_data['comercial_address'] or None,
+        'comercial_email': res_data['comercial_email'] or None,
     })
 
     permissions_formset = TutorPermissionsFormset(initial=[
