@@ -155,7 +155,13 @@ def register_student(request, request_data, student_id, edition=False):
     relationships = StudentTutorRelationship.objects.filter(student_profile=student_profile)
     student_tutors = [relationship.tutor for relationship in relationships]
 
-    response = ControllerResponse(request, _(u"Mensaje de respuesta por defecto"))
+    # Redirect where it comes from
+    redirect = utilities.deduct_redirect_response(request, None)
+    response = ControllerResponse(
+        request,
+        _(u"Mensaje de respuesta por defecto"),
+        redirect='registration_backend_register_student' if not edition else redirect
+    )
 
     payment_configuration_form = PaymentResponsableConfigurationForm(data=request_data)
     permissions_formset = TutorPermissionsFormset(request_data)
@@ -274,9 +280,6 @@ def register_student(request, request_data, student_id, edition=False):
                 value='{}'.format(allow_view_voucher)
             )
 
-        # Redirect where it comes from
-        redirect = utilities.deduct_redirect_response(request, None)
-
         response = ControllerResponse(
             request,
             _(u"Cliente registrado exitosamente en Odoo"),
@@ -294,14 +297,15 @@ def register_student(request, request_data, student_id, edition=False):
         # Return a redirect
         return response
     else:
-        print(payment_configuration_form.errors)
+        # print(list(payment_configuration_form.errors.items))
         print(permissions_formset.errors)
 
     response.sets({
         'student_profile': student_profile,
         'student_tutors': student_tutors,
         'payment_configuration_form': payment_configuration_form,
-        'permissions_formset': permissions_formset
+        'permissions_formset': permissions_formset,
+        'errors': payment_configuration_form.errors,
     })
 
     return response
