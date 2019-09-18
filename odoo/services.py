@@ -287,6 +287,9 @@ def register_client(
     except requests.RequestException:
         return (None, None, None, None)
 
+def update_student(student, client_id):
+    return api.update_student(student, client_id)
+
 def get_payment_responsable_data(client_id):
     try:
         return api.get_payment_responsable_data(client_id)

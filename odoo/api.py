@@ -272,3 +272,18 @@ def get_payment_responsable_data(family_id):
     })
 
     return result
+
+
+def update_student(student, client_id):
+    url, db, username, password = get_odoo_settings()
+
+    uid = services.authenticate_user(url, db, username, password)
+    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+
+    name = '{}, {}'.format(student.user.last_name.encode('utf-8'), student.user.first_name.encode('utf-8'))
+
+    try:
+        models.execute_kw(db, uid, password, 'res.partner', 'write', [[client_id], { 'name': name }])
+        return True
+    except:
+        return False

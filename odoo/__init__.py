@@ -50,6 +50,8 @@ def search_clients(query):
 def get_payment_responsable_data(client_id):
     return services.get_payment_responsable_data(client_id)
 
+def update_student(student, client_id):
+    return services.update_student(student, client_id)
 
 def register_client(
         student_client_id,
