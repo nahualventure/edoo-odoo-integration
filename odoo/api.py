@@ -217,6 +217,10 @@ def register_client(
             'id': student_client_id,
             'ref': student_profile.code,
             'name': student_profile.user.formal_name.encode('utf-8'),
+            'name': '{}, {}'.format(
+                student_profile.user.last_name.encode('utf-8'),
+                student_profile.user.first_name.encode('utf-8')
+            ),
             'email': student_profile.user.email,
             'parent_id': client_id,
             'company_id': company_id,
