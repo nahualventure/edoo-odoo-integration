@@ -288,8 +288,8 @@ def register_client(
     except requests.RequestException:
         return (None, None, None, None)
 
-def update_student(student, client_id):
-    return api.update_student(student, client_id)
+def update_partner(client_id, data):
+    return api.update_partner(client_id, data)
 
 def get_payment_responsable_data(client_id):
     try:

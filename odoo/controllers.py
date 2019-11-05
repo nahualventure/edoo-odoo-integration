@@ -570,6 +570,7 @@ def enroll_or_unenroll_student(request):
                 students = StudentProfile.objects.filter(pk__in=data[unenrolled_students])
                 students.update(pre_registered=False)
 
+    print ('success_partners', success_partners)
     return JsonResponse({ 'message': 'done!', 'partners': success_partners }, status=200)
 
 
