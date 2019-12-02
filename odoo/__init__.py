@@ -1,4 +1,4 @@
-import services
+import .services as services
 
 NAME = 'odoo'
 

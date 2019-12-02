@@ -300,6 +300,7 @@ def register_student(request, request_data, student_id, edition=False):
         # print(list(payment_configuration_form.errors.items))
         print(permissions_formset.errors)
 
+    print ('xxxxxxxxxxxxxxxxxx', payment_configuration_form.errors, permissions_formset.errors)
     response.sets({
         'student_profile': student_profile,
         'student_tutors': student_tutors,
