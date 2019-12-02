@@ -3,7 +3,7 @@
 import requests
 from . import api
 from django.conf import settings
-import xmlrpclib
+from xmlrpclib import ServerProxy
 from datetime import datetime
 
 class OdooAuthentication(object):
@@ -20,7 +20,7 @@ class OdooAuthentication(object):
     def __new__(args, host, database, username, password):
         if OdooAuthentication.__instance is None:
             try:
-                common = xmlrpclib.ServerProxy('{}/xmlrpc/2/common'.format(host))
+                common = ServerProxy('{}/xmlrpc/2/common'.format(host))
                 OdooAuthentication.uid = common.authenticate(database, username, password, {})
                 OdooAuthentication.__instance = object.__new__(args)
             except Exception as e:
