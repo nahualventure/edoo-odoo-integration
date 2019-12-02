@@ -2,7 +2,7 @@
 
 import requests
 from django.conf import settings
-import xmlrpclib
+from xmlrpclib import ServerProxy
 import time
 import services
 import json
@@ -38,7 +38,7 @@ def post_client(data):
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
-    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     partner = models.execute_kw(
         db, uid, password, 'edoo.api.integration',
@@ -53,7 +53,7 @@ def get_client(client_id):
 
     uid = services.authenticate_user(url, db, username, password)
 
-    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     client = models.execute_kw(db, uid, password,
         'res.partner', 'search_read',
@@ -68,7 +68,7 @@ def get_client(client_id):
 def get_data_clients(client_ids, fields):
     url, db, username, password = get_odoo_settings()
     uid = services.authenticate_user(url, db, username, password)
-    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     fields.append('parent_id')
     comercial_clients = models.execute_kw(db, uid, password,
@@ -125,7 +125,7 @@ def get_account_statement(clients, code):
 
     uid = services.authenticate_user(url, db, username, password)
 
-    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     transactions_by_client = models.execute_kw(db, uid, password,
             'edoo.api.integration', 'get_account_statement',
@@ -143,7 +143,7 @@ def search_clients(query):
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
-    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     company_id = Odoo.CUSTOM_SETTINGS['company_pk']
 
@@ -186,7 +186,7 @@ def register_client(
     comercial_id = comercial_id or False
 
     uid = services.authenticate_user(url, db, username, password)
-    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     company_id = Odoo.CUSTOM_SETTINGS['company_pk']
 
@@ -253,7 +253,7 @@ def get_payment_responsable_data(family_id):
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
-    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     result = models.execute_kw(
         db, uid, password, 'edoo.api.integration',
@@ -278,7 +278,7 @@ def update_partner(client_id, data):
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
-    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
+    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     for key, value in data.items():
         if callable(value):
