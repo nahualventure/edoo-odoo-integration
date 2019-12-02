@@ -2,7 +2,12 @@
 
 import requests
 from django.conf import settings
-from xmlrpc.client import ServerProxy
+try:
+    from xmlrpclib import ServerProxy
+except ImportError:
+    from xmlrpc.client import ServerProxy
+
+
 import time
 from . import services
 import json
