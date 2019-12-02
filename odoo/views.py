@@ -6,7 +6,7 @@ from django.views.decorators.http import require_http_methods
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
 
-import controllers
+from . import controllers
 from utils import services as utilities
 
 

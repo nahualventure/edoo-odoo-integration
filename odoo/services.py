@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import requests
-import api
+from . import api
 from django.conf import settings
 import xmlrpclib
 from datetime import datetime
