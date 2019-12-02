@@ -3,7 +3,8 @@
 import requests
 from . import api
 from django.conf import settings
-from xmlrpclib import ServerProxy
+# from xmlrpclib import ServerProxy
+from xmlrpc.client import ServerProxy
 from datetime import datetime
 
 class OdooAuthentication(object):
