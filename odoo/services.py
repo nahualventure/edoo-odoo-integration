@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import requests
-from . import api
+try:
+    from . import api
+except ImportError:
+    import api
+
 from django.conf import settings
 try:
     from xmlrpclib import ServerProxy

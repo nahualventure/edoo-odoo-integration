@@ -6,10 +6,12 @@ try:
     from xmlrpclib import ServerProxy
 except ImportError:
     from xmlrpc.client import ServerProxy
-
-
 import time
-from . import services
+try:
+    from . import services
+except ImportError:
+    import services
+
 import json
 
 

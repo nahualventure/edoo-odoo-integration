@@ -16,7 +16,11 @@ from utils.controllers import ControllerResponse
 from utils import services as utilities
 from integrations.services import get_integration_id
 
-import services
+
+try:
+    from . import services
+except ImportError:
+    import services
 from forms import (
     ContractForm,
     TutorPermissionsFormset,
