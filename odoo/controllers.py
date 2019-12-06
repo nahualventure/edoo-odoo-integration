@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import json
-from django.contrib.auth import get_user_model
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.urls import reverse
@@ -13,7 +11,6 @@ from userprofiles.models import (
     StudentProfile)
 
 from utils.controllers import ControllerResponse
-from utils import services as utilities
 from integrations.services import get_integration_id
 
 
@@ -40,8 +37,6 @@ from cycle.models import Cycle
 from integrations.models import Integration, IntegrationConfig
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from pprint import pprint
-import time
 from django.conf import settings
 from school.models import School
 
