@@ -18,7 +18,7 @@ try:
     from . import services
 except ImportError:
     import services
-from forms import (
+from .forms import (
     ContractForm,
     TutorPermissionsFormset,
     PaymentResponsableConfigurationForm
