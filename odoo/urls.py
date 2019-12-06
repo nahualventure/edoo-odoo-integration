@@ -1,41 +1,41 @@
 # -*- coding: utf-8 -*-
-from django.conf.urls import url
+from django.urls import path
 
 from . import views
 
 urlpatterns = [
-    url(
-        r'^student/enroll-or-unenroll/$',
+    path(
+        'student/enroll-or-unenroll/',
         views.enroll_or_unenroll_student,
         name='enroll_or_unenroll_student'
     ),
-    url(
-        r'^synchronization/account-statements/$',
+    path(
+        'synchronization/account-statements/',
         views.synchronization_account_statements,
         name='synchronization_account_statements'
     ),
-    url(
-        r'^synchronization/school-management-type/$',
+    path(
+        'synchronization/school-management-type/',
         views.school_management_type,
         name='school_management_type'
     ),
-    url(
-        r'^(?P<student_id>[\w.@+-]+)/registration/$',
+    path(
+        '(<str:student_id>/registration/',
         views.registration,
         name='odoo-registration'
     ),
-    url(
-        r'^(?P<student_id>[\w.@+-]+)/client-edition/$',
+    path(
+        '(<str:student_id>/client-edition/',
         views.client_edition,
         name='odoo-client-edition'
     ),
-    url(
-        r'^search/clients/$',
+    path(
+        'search/clients/',
         views.search_clients,
         name='odoo-search-clients'
     ),
-    url(
-        r'^ajax/tutor-invoice/$',
+    path(
+        'ajax/tutor-invoice/',
         views.tutor_invoice,
         name='odoo-tutor-invoice'
     )
