@@ -20,12 +20,12 @@ urlpatterns = [
         name='school_management_type'
     ),
     path(
-        '(<str:student_id>/registration/',
+        '<str:student_id>/registration/',
         views.registration,
         name='odoo-registration'
     ),
     path(
-        '(<str:student_id>/client-edition/',
+        '<str:student_id>/client-edition/',
         views.client_edition,
         name='odoo-client-edition'
     ),
