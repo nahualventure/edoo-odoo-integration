@@ -309,8 +309,8 @@ def get_odoo_company():
             [
                 ['id', '=', company_id]
             ],
-            {'fields': ['id', 'name', 'school_financial_email'], 'limit': 1}
-        ]
+        ],
+        {'fields': ['id', 'name', 'school_financial_email'], 'limit': 1}
     )
 
     return len(companies) and companies[0] or None
