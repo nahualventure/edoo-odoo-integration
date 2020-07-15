@@ -303,7 +303,7 @@ def get_odoo_company():
 
     company_id = Odoo.CUSTOM_SETTINGS['company_pk']
 
-    company = models.execute_kw(
+    companies = models.execute_kw(
         db, uid, password, 'res.company', 'search_read',
         [
             [
@@ -313,4 +313,4 @@ def get_odoo_company():
         ]
     )
 
-    return company
+    return len(companies) and companies[1] or None
