@@ -224,6 +224,7 @@ def call_account_statement(clients, code):
         print ("Error en el request")
         return None
 
+
 def call_account_statement_legacy(client_id, comercial_id, data):
     try:
         response = api.get_account_statement_legacy(client_id, comercial_id, data)
@@ -252,12 +253,20 @@ def set_discount(client_id, data):
         return False, {}
 
 
+def get_odoo_company():
+    try:
+        return api.get_odoo_company()
+    except:
+        return None
+
+
 def authenticate_user(host, database, username, password):
     try:
         auth = OdooAuthentication(host, database, username, password)
         return auth.uid
     except Exception as e:
         raise e
+
 
 def search_clients(query):
     try:
@@ -295,8 +304,10 @@ def register_client(
     except requests.RequestException:
         return (None, None, None, None)
 
+
 def update_partner(client_id, data):
     return api.update_partner(client_id, data)
+
 
 def get_payment_responsable_data(client_id):
     try:
@@ -305,10 +316,12 @@ def get_payment_responsable_data(client_id):
         print ("Error en el request")
         return None
 
+
 odoo_versions_updated = [
     '10.0',
     '12.0',
 ]
+
 
 def _validate_version(version):
     return version in odoo_versions_updated

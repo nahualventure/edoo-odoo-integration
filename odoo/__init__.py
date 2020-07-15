@@ -78,3 +78,7 @@ def register_client(
         comercial_name,
         comercial_email
     )
+
+
+def get_odoo_company():
+    return services.get_odoo_company()
