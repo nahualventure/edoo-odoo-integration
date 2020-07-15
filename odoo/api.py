@@ -299,7 +299,7 @@ def get_odoo_company():
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
-    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
+    models = xmlrpclib.ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     company_id = Odoo.CUSTOM_SETTINGS['company_pk']
 
