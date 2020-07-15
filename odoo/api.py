@@ -293,3 +293,24 @@ def update_partner(client_id, data):
         return True
     except:
         return False
+
+
+def get_odoo_company():
+    url, db, username, password = get_odoo_settings()
+
+    uid = services.authenticate_user(url, db, username, password)
+    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
+
+    company_id = Odoo.CUSTOM_SETTINGS['company_pk']
+
+    company = models.execute_kw(
+        db, uid, password, 'res.company', 'search_read',
+        [
+            [
+                ['id', '=', company_id]
+            ],
+            {'fields': ['id', 'name', 'school_financial_email'], 'limit': 1}
+        ]
+    )
+
+    return company
