@@ -313,4 +313,4 @@ def get_odoo_company():
         ]
     )
 
-    return len(companies) and companies[1] or None
+    return len(companies) and companies[0] or None
