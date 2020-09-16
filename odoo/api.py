@@ -205,15 +205,15 @@ def register_client(
             'id': client_id,
             'emails': [tutor.user.email for tutor in student_tutors],
             'company_id': company_id,
-            'name': client_name.encode('utf-8'),
+            'name': client_name,
             'ref': family_code
         },
 
         'commercial_contact': {
             'id': comercial_id,
-            'address': comercial_address.encode('utf-8'),
+            'address': comercial_address,
             'vat': comercial_number,
-            'name': comercial_name.encode('utf-8'),
+            'name': comercial_name,
             'email': comercial_email,
             'parent_id': client_id,
             'type': 'invoice',
@@ -223,10 +223,9 @@ def register_client(
         'student': {
             'id': student_client_id,
             'ref': student_profile.code,
-            'name': student_profile.user.formal_name.encode('utf-8'),
             'name': '{}, {}'.format(
-                student_profile.user.last_name.encode('utf-8'),
-                student_profile.user.first_name.encode('utf-8')
+                student_profile.user.last_name,
+                student_profile.user.first_name
             ),
             'email': student_profile.user.email,
             'parent_id': client_id,
