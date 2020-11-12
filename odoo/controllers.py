@@ -459,12 +459,12 @@ def enroll_or_unenroll_student(request):
             student_data[key] = [odoo_user]
 
     students = StudentProfile.objects.filter(
-        code__in=[code for code in student_data.iterkeys()]
+        code__in=[code for code in student_data.keys()]
     ).select_related('current_cycle', 'user')
 
     students_cycle_rel = StudentProfileCycle.objects.filter(
-        student_profile__code__in=[code for code in student_data.iterkeys()],
-        cycle__in=[cycle for cycle in cycles_dic.itervalues()]).values_list('student_profile__code', 'cycle__pk')
+        student_profile__code__in=[code for code in student_data.keys()],
+        cycle__in=[cycle for cycle in cycles_dic.values()]).values_list('student_profile__code', 'cycle__pk')
 
     students_cycle_rel_dict = {}
     for rel in students_cycle_rel:
@@ -540,7 +540,7 @@ def enroll_or_unenroll_student(request):
                     _add_success_partner(student_client_id, enrolled_in_odoo, is_contact_odoo, cycle_pk)
 
         students_by_ordinal_cycle = []
-        for ordinal, values in students_by_cycle.iteritems():
+        for ordinal, values in students_by_cycle.items():
             students_by_ordinal_cycle.append({
                 'ordinal': ordinal,
                 'students_for_update': values
