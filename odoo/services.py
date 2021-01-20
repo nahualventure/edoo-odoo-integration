@@ -44,6 +44,14 @@ def get_account_statements(name=''):
     ).order_by(RawSQL("data->>%s", ("ordinal",)))
 
 
+def shop_url(client_id):
+    try:
+        return api.get_shop_url(client_id)
+    except requests.RequestException:
+        print ("Error en el request")
+        return None
+
+
 def create_client(data):
     try:
         response = api.post_client(data)

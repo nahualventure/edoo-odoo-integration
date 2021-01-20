@@ -111,12 +111,12 @@ def set_discount(client_id, data):
 
 
 def get_odoo_settings():
-    return [
+    return (
         Odoo.CONTEXT['host'],
         Odoo.CONTEXT['db'],
         Odoo.CONTEXT['username'],
         Odoo.CONTEXT['password'],
-    ]
+    )
 
 
 def get_allowed_invoice_journals():
@@ -320,3 +320,17 @@ def get_odoo_company():
     )
 
     return len(companies) and companies[0] or None
+
+
+def get_shop_url(client_id):
+    url, db, username, password = get_odoo_settings()
+
+    uid = services.authenticate_user(url, db, username, password)
+    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
+
+    response = models.execute_kw(
+        db, uid, password, 'edoo.api.integration',
+        'get_shop_url_with_token', [{'client_id:': client_id}]
+    )
+
+    return response.get('url')
