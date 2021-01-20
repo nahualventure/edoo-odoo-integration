@@ -333,4 +333,4 @@ def get_shop_url(client_id):
         'get_shop_url_with_token', [{'client_id:': client_id}]
     )
 
-    return response.get('url')
+    return response
