@@ -2,6 +2,10 @@ from . import services
 
 NAME = 'odoo'
 
+def shop_url(client_id):
+    return services.shop_url(client_id)
+
+
 def get_account_statements(code=''):
     return services.get_account_statements(code)
 
