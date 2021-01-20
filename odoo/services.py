@@ -40,7 +40,7 @@ def get_account_statements(name=''):
     from django.db.models.expressions import RawSQL
 
     return IntegrationConfig.objects.filter(
-        key__contains='account_statement_'.format(name), integration__key='odoo'
+        key__contains='account_statement_{}'.format(name), integration__key='odoo'
     ).order_by(RawSQL("data->>%s", ("ordinal",)))
 
 
