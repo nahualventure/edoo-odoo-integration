@@ -132,7 +132,7 @@ def parse_account_statement_data(clients):
                 trans = {
                     'code': invoice['id'],
                     'description': invoice_description,
-                    'date': invoice['date_invoice'],
+                    'date': invoice['invoice_date'],
                     'expired': invoice['insolvent'] or False,
                     'date_due': invoice['date_due'],
                     'payment_method': invoice['journal_id'][1],
