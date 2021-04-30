@@ -11,7 +11,7 @@ from userprofiles.models import (
     StudentProfile,
     StudentProfileLogRecord
 )
-from userprofiles.services import create_userprofiles_log
+from userprofiles.services import create_userprofile_log
 
 from utils.controllers import ControllerResponse
 from integrations.services import get_integration_id
@@ -288,9 +288,9 @@ def register_student(request, request_data, student_id, edition=False):
             'field': 'odoo'
         }
 
-        create_userprofiles_log(
+        create_userprofile_log(
             StudentProfileLogRecord.STUDENT_PROFILE_INFO_EDITED, 
-            user, 
+            student_profile, 
             request.user, 
             student_profile_odoo_data_edited
         )
