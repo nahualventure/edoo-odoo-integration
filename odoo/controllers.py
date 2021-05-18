@@ -8,7 +8,10 @@ from django.utils.translation import ugettext as _
 from userprofiles.models import (
     StudentTutorRelationship,
     TutorProfile,
-    StudentProfile)
+    StudentProfile,
+    StudentProfileLogRecord
+)
+from userprofiles.services import create_userprofile_log
 
 from utils.controllers import ControllerResponse
 from integrations.services import get_integration_id
@@ -278,6 +281,19 @@ def register_student(request, request_data, student_id, edition=False):
                 key='allow_view_voucher',
                 value='{}'.format(allow_view_voucher)
             )
+
+        # This method is being used on client_edition endpoint also 
+        # So, we need to save a userprofile log on edition
+        student_profile_odoo_data_edited = {
+            'field': 'odoo'
+        }
+
+        create_userprofile_log(
+            StudentProfileLogRecord.STUDENT_PROFILE_INFO_EDITED, 
+            student_profile, 
+            request.user, 
+            student_profile_odoo_data_edited
+        )
 
         response = ControllerResponse(
             request,
