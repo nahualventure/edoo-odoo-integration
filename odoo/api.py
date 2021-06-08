@@ -330,7 +330,7 @@ def get_shop_url(client_id):
 
     response = models.execute_kw(
         db, uid, password, 'edoo.api.integration',
-        'get_shop_url_with_token', [{'client_id:': client_id}]
+        'get_shop_url_with_token', [{'client_id': client_id}]
     )
 
     return response
