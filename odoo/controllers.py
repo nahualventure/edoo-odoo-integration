@@ -567,9 +567,9 @@ def enroll_or_unenroll_student(request):
             data = cycle['students_for_update']
 
             # deactivate
-            # if deactived_users in data:
-            #     users = CustomUser.objects.filter(pk__in=data[deactived_users])
-            #     users.update(is_active=False)
+            if deactived_users in data:
+                users = CustomUser.objects.filter(pk__in=data[deactived_users])
+                users.update(is_active=False)
 
             # activate
             if actived_users in data:
