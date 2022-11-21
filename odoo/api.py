@@ -170,17 +170,17 @@ def search_clients(query):
 
 
 def register_client(
-        student_client_id=False,
-        student_profile=None,
-        student_tutors=[],
-        client_id=False,
-        client_name='',
-        client_ref=False,
-        comercial_id=False,
-        comercial_address='',
-        comercial_number='',
-        comercial_name='',
-        comercial_email=''):
+        student_client_id,
+        student_profile,
+        student_tutors,
+        client_id,
+        client_name,
+        client_ref,
+        comercial_id,
+        comercial_address,
+        comercial_number,
+        comercial_name,
+        comercial_email):
     """
     client_id: family id, odoo contact top level
     student_client_id: student id, odoo contact child level
