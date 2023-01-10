@@ -190,7 +190,6 @@ def register_client(
 
     student_client_id = student_client_id or False
     client_id = client_id or False
-    comercial_id = comercial_id or False
 
     uid = services.authenticate_user(url, db, username, password)
     models = ServerProxy('{}/xmlrpc/2/object'.format(url))
@@ -204,7 +203,6 @@ def register_client(
         'family': {
             'id': client_id,
             'emails': [tutor.user.email for tutor in student_tutors],
-            'company_id': company_id,
             'name': client_name,
             'ref': family_code
         },
@@ -215,9 +213,6 @@ def register_client(
             'vat': comercial_number,
             'name': comercial_name,
             'email': comercial_email,
-            'parent_id': client_id,
-            'type': 'invoice',
-            'company_id': company_id
         },
 
         'student': {
@@ -228,8 +223,6 @@ def register_client(
                 student_profile.user.first_name
             ),
             'email': student_profile.user.email,
-            'parent_id': client_id,
-            'company_id': company_id,
             'level_id': student_profile.level.pk if student_profile.level else False
         }
     }
