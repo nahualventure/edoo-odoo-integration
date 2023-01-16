@@ -188,23 +188,27 @@ def register_client(
     """
     url, db, username, password = get_odoo_settings()
 
+    if not student_profile.exists():
+        return None, None, None, None
+
     student_client_id = student_client_id or False
     client_id = client_id or False
+    comercial_id = comercial_id or False
+    client_name = client_name or False
+    client_ref = client_ref or False
+    company_id = Odoo.CUSTOM_SETTINGS['company_pk'] or False
+    emails = [tutor.user.email or '' for tutor in student_tutors]
 
     uid = services.authenticate_user(url, db, username, password)
     models = ServerProxy('{}/xmlrpc/2/object'.format(url))
-
-    company_id = Odoo.CUSTOM_SETTINGS['company_pk']
-
-    family_code = client_ref or False
 
     data = {
         'company_id': company_id,
         'family': {
             'id': client_id,
-            'emails': [tutor.user.email for tutor in student_tutors],
+            'emails': emails,
             'name': client_name,
-            'ref': family_code
+            'ref': client_ref
         },
 
         'commercial_contact': {
@@ -223,7 +227,7 @@ def register_client(
                 student_profile.user.first_name
             ),
             'email': student_profile.user.email,
-            'level_id': student_profile.level.pk if student_profile.level else False
+            'level_id': student_profile.level and student_profile.level.pk or False
         }
     }
 
