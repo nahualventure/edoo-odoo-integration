@@ -188,9 +188,6 @@ def register_client(
     """
     url, db, username, password = get_odoo_settings()
 
-    if not student_profile.exists():
-        return None, None, None, None
-
     student_client_id = student_client_id or False
     client_id = client_id or False
     comercial_id = comercial_id or False
