@@ -49,7 +49,7 @@ def post_client(data):
 
     partner = models.execute_kw(
         db, uid, password, 'edoo.api.integration',
-        'post_client', [{ 'name': data.get('name') }]
+        'post_client', [{'name': data.get('name', '')}]
     )
 
     return partner
@@ -137,11 +137,11 @@ def get_account_statement(clients, code):
     transactions_by_client = models.execute_kw(db, uid, password,
             'edoo.api.integration', 'get_account_statement',
                 [{
-                    'clients': clients,
-                    'code': code,
-                    'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
+                    'clients': [int(s) for s in clients or [] if s],
+                    'code': code or '',
+                    'company_id': int(Odoo.CUSTOM_SETTINGS['company_pk'])
                 }]
-        )
+    )
 
     return transactions_by_client
 
@@ -152,11 +152,12 @@ def search_clients(query):
     uid = services.authenticate_user(url, db, username, password)
     models = ServerProxy('{}/xmlrpc/2/object'.format(url))
 
-    company_id = Odoo.CUSTOM_SETTINGS['company_pk']
-
-    partners = models.execute_kw(
-        db, uid, password, 'edoo.api.integration',
-        'search_clients', [{ 'word': query, 'company_id': company_id }]
+    partners = models.execute_kw(db, uid, password,
+            'edoo.api.integration', 'search_clients',
+                [{
+                    'word': query or '',
+                    'company_id': int(Odoo.CUSTOM_SETTINGS['company_pk'])
+                }]
     )
 
     for partner in partners:
@@ -189,42 +190,39 @@ def register_client(
     url, db, username, password = get_odoo_settings()
 
     student_client_id = student_client_id or False
-    client_id = client_id or False
-    comercial_id = comercial_id or False
-    client_name = client_name or False
-    client_ref = client_ref or False
-    company_id = Odoo.CUSTOM_SETTINGS['company_pk'] or False
-    emails = [tutor.user.email or '' for tutor in student_tutors]
+    emails = [tutor.user.email or '' for tutor in student_tutors or []]
 
     uid = services.authenticate_user(url, db, username, password)
     models = ServerProxy('{}/xmlrpc/2/object'.format(url))
 
     data = {
-        'company_id': company_id,
+        'company_id': int(Odoo.CUSTOM_SETTINGS['company_pk']),
         'family': {
-            'id': client_id,
+            'id': client_id and int(client_id) or 0,
             'emails': emails,
-            'name': client_name,
-            'ref': client_ref
+            'name': client_name or '',
+            'ref': client_ref or ''
         },
 
         'commercial_contact': {
-            'id': comercial_id,
-            'address': comercial_address,
-            'vat': comercial_number,
-            'name': comercial_name,
-            'email': comercial_email,
+            'id': comercial_id and int(comercial_id) or 0,
+            'address': comercial_address or '',
+            'vat': comercial_number or '',
+            'name': comercial_name or '',
+            'email': comercial_email or '',
         },
 
         'student': {
-            'id': student_client_id,
-            'ref': student_profile.code,
+            'id': student_client_id and int(student_client_id) or 0,
+            'ref': student_profile.code or '',
             'name': '{}, {}'.format(
                 student_profile.user.last_name,
                 student_profile.user.first_name
             ),
-            'email': student_profile.user.email,
-            'level_id': student_profile.level and student_profile.level.pk or False
+            'email': student_profile.user.email or '',
+            'level_id': student_profile.level and student_profile.level.pk or 0,
+            # 'cycle_id': 0,
+            # 'section_name': ''
         }
     }
 
@@ -258,8 +256,8 @@ def get_payment_responsable_data(family_id):
     result = models.execute_kw(
         db, uid, password, 'edoo.api.integration',
         'get_payment_responsable_data', [{
-            'parent_id': family_id,
-            'company_id': Odoo.CUSTOM_SETTINGS['company_pk']
+            'parent_id': family_id and int(family_id) or 0,
+            'company_id': int(Odoo.CUSTOM_SETTINGS['company_pk'])
         }]
     )
 
