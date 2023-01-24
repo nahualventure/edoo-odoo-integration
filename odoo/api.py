@@ -215,6 +215,8 @@ def register_client(
         'student': {
             'id': student_client_id and int(student_client_id) or 0,
             'ref': student_profile.code or '',
+            'first_name': student_profile.user.first_name,
+            'last_name': student_profile.user.last_name,
             'name': '{}, {}'.format(
                 student_profile.user.last_name,
                 student_profile.user.first_name
