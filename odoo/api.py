@@ -223,8 +223,8 @@ def register_client(
             ),
             'email': student_profile.user.email or '',
             'level_id': student_profile.level and student_profile.level.pk or 0,
-            # 'cycle_id': 0,
-            # 'section_name': ''
+            'cycle_id': student_profile.current_cycle and student_profile.current_cycle.pk or 0,
+            'section_name': student_profile.main_section
         }
     }
 
