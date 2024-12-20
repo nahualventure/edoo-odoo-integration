@@ -327,100 +327,6 @@ def register_student(request, request_data, student_id, edition=False):
     return response
 
 
-def tutor_invoice(request):
-
-    username = request.GET.get('username', None)
-
-    user = User.objects.get(username=username)
-    client_id = get_integration_id(user)
-
-    success, response = services.call_client(client_id)
-
-    return JsonResponse(response)
-
-
-def set_contract(request, username, request_data, redirect_url=None):
-    """ Student registration manager. """
-
-    # Validate permission
-    request.user.can(
-        'userprofiles.add_studentprofile',
-        raise_exception=True)
-
-    # Build redirect response
-    redirect_response = HttpResponseRedirect(request.META['HTTP_REFERER'])
-    if redirect_url:
-        redirect_response = HttpResponseRedirect(redirect_url)
-
-    # Retrieve from HTTP
-    contract_form = ContractForm(
-        data=request_data)
-
-    if contract_form.is_valid():
-        contract_id = contract_form.cleaned_data.get('contract_id')
-        products = contract_form.cleaned_data.get('products')
-        payments_responsible = contract_form.cleaned_data.get('payments_responsible')
-        name = contract_form.cleaned_data.get('name')
-        nit = contract_form.cleaned_data.get('nit')
-        phone = contract_form.cleaned_data.get('phone')
-        address = contract_form.cleaned_data.get('address')
-        # tutors_visibility = contract_form.cleaned_data.get('tutors_visibility')
-
-        # Get users
-        user = User.objects.get(username=username)
-        tutor = User.objects.get(username=payments_responsible)
-
-        # Get integration object
-        client_id = get_integration_id(user)
-        tutor_client_id = get_integration_id(tutor)
-
-        contract_data = {
-            'contract_id': contract_id,
-            'products': products
-        }
-
-        tutor_client_data = {
-            'invoice_identifier': nit,
-            'invoice_name': name,
-            'invoice_phone': phone,
-            'invoice_address': address
-        }
-
-        client_data = {
-            'super_client_id': tutor_client_id
-        }
-
-        u_success, u_response = services.set_contract(client_id, contract_data)
-
-        t_success, t_response = services.update_client(client_id, client_data)
-
-        c_success, c_response = services.update_client(tutor_client_id, tutor_client_data)
-
-        redirect_response = HttpResponseRedirect(reverse('registration_backend'))
-
-        return ControllerResponse(
-            request,
-            _(u"Registro completado exitosamente"),
-            message_position='default',
-            redirect=redirect_response)
-
-    # Else
-    response = ControllerResponse(
-        request,
-        _(u"Se encontraron algunos problemas en el formulario de estudiante"),
-        message_position='default',
-        redirect=redirect_response)
-
-    # Transport data and errors
-    utilities.transport_form_through_session(
-        request,
-        contract_form,
-        'contract_form')
-
-    response.set_error()
-    return response
-
-
 def search_clients(request, query):
     return JsonResponse(services.search_clients(query), safe=False)
 
@@ -594,6 +500,7 @@ def _get_student(student_client_id):
     config = IntegrationConfig.objects.get(key='client_id', value=student_client_id)
     content_type = ContentType.objects.get(pk=config.content_type.pk)
     return content_type.get_object_for_this_type(pk=config.object_id)
+
 
 def synchronization_school_management_type(request_data):
     data = request_data.data.get('data', {})

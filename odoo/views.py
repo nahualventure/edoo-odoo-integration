@@ -54,20 +54,6 @@ def client_edition(request, student_id):
 
 @csrf_protect
 @require_http_methods(['GET'])
-def tutor_invoice(request):
-    """
-    Require: GET
-
-    **GET**: returns a JSON with the tutor invoice information.
-    """
-
-    cr = controllers.tutor_invoice(request)
-
-    return cr
-
-
-@csrf_protect
-@require_http_methods(['GET'])
 def search_clients(request):
     query = request.GET.get('text', "")
     return controllers.search_clients(request, query)

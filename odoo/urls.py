@@ -33,10 +33,5 @@ urlpatterns = [
         'search/clients/',
         views.search_clients,
         name='odoo-search-clients'
-    ),
-    path(
-        'ajax/tutor-invoice/',
-        views.tutor_invoice,
-        name='odoo-tutor-invoice'
     )
 ]

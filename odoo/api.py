@@ -20,9 +20,6 @@ if not hasattr(settings, 'ODOO_SETTINGS'):
 
 
 class Odoo:
-    CONTRACTS = "contracts"
-    CLIENTS = "clients"
-    DISCOUNTS = "discounts"
     ACCOUNT_STATEMENT = "account-statement"
     DEFAULT_AVATAR = "https://www.drupal.org/files/issues/default-avatar.png"
 
@@ -41,75 +38,6 @@ class Odoo:
     }
 
 
-def post_client(data):
-    url, db, username, password = get_odoo_settings()
-
-    uid = services.authenticate_user(url, db, username, password)
-    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
-
-    partner = models.execute_kw(
-        db, uid, password, 'edoo.api.integration',
-        'post_client', [{'name': data.get('name', '')}]
-    )
-
-    return partner
-
-
-def get_client(client_id):
-    url, db, username, password = get_odoo_settings()
-
-    uid = services.authenticate_user(url, db, username, password)
-
-    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
-
-    client = models.execute_kw(db, uid, password,
-        'res.partner', 'search_read',
-        [[['id', '=', client_id]]]
-    )
-
-    if not len(client):
-        return None
-
-    return client[0]
-
-def get_data_clients(client_ids, fields):
-    url, db, username, password = get_odoo_settings()
-    uid = services.authenticate_user(url, db, username, password)
-    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
-
-    fields.append('parent_id')
-    comercial_clients = models.execute_kw(db, uid, password,
-            'res.partner', 'search_read',
-            [[['parent_id', 'in', client_ids], ['type', '=', 'invoice']]],
-            {'fields': fields}
-        )
-
-    return comercial_clients
-
-
-def put_client(client_id, data):
-    return requests.put("{0}{1}/{2}".format(Odoo.BASE_URL, Odoo.CLIENTS, client_id),
-                        data=data.update(CONTEXT))
-
-
-def get_contracts():
-    return requests.get("{0}{1}".format(Odoo.CONTEXT.get('HOST', ''), Odoo.CONTRACTS))
-
-
-def set_contract(client_id, data):
-    return requests.put("{0}{1}/{2}/{3}".format(Odoo.BASE_URL, Odoo.CLIENTS, client_id, Odoo.CONTRACTS),
-                        data=data.update(CONTEXT))
-
-
-def get_discounts():
-    return requests.get("{0}{1}".format(Odoo.BASE_URL, Odoo.DISCOUNTS), data=CONTEXT)
-
-
-def set_discount(client_id, data):
-    return requests.put("{0}{1}/{2}/{3}".format(Odoo.BASE_URL, Odoo.CLIENTS, client_id, Odoo.DISCOUNTS),
-                        data=data.update(CONTEXT))
-
-
 def get_odoo_settings():
     return (
         Odoo.CONTEXT['host'],
@@ -117,14 +45,6 @@ def get_odoo_settings():
         Odoo.CONTEXT['username'],
         Odoo.CONTEXT['password'],
     )
-
-
-def get_allowed_invoice_journals():
-    return settings.ODOO_SETTINGS['ALLOWED_INVOICE_JOURNALS']
-
-
-def get_allowed_payment_journals():
-    return settings.ODOO_SETTINGS['ALLOWED_PAYMENT_JOURNALS']
 
 
 def get_account_statement(clients, code):

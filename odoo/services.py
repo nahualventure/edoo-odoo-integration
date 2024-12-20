@@ -52,62 +52,6 @@ def shop_url(client_id):
         return None
 
 
-def create_client(data):
-    try:
-        response = api.post_client(data)
-
-        return response
-    except requests.RequestException:
-        print ("Error en el request")
-        return None
-
-
-def call_client(client_id):
-    try:
-        response = api.get_client(client_id)
-
-        return response
-    except requests.RequestException:
-        print ("Error en el request")
-        return None
-
-def call_data_clients(client_ids, fields):
-    try:
-        response = api.get_data_clients(client_ids, fields)
-
-        return response
-    except requests.RequestException:
-        print ("Error en el request")
-        return None
-
-
-def update_client(client_id, data):
-    try:
-        response = api.put_client(client_id, data=data)
-        return response.status_code == requests.codes.ok, response.json()
-    except requests.RequestException:
-        print ("Error en el request")
-        return False, {}
-
-
-def call_contracts():
-    try:
-        response = api.get_contracts()
-        return response.status_code == requests.codes.ok, response.json()
-    except requests.RequestException:
-        print ("Error en el request")
-        return False, {}
-
-
-def call_discounts():
-    try:
-        response = api.get_discounts()
-        return response.status_code == requests.codes.ok, response.json()
-    except requests.RequestException:
-        print ("Error en el request")
-        return False, {}
-
-
 def call_account_statement(clients, code):
     try:
         response = api.get_account_statement(clients, code)
@@ -115,34 +59,6 @@ def call_account_statement(clients, code):
     except requests.RequestException:
         print ("Error en el request")
         return None
-
-
-def call_account_statement_legacy(client_id, comercial_id, data):
-    try:
-        response = api.get_account_statement_legacy(client_id, comercial_id, data)
-
-        return response
-    except requests.RequestException:
-        print ("Error en el request")
-        return None
-
-
-def set_contract(client_id, data):
-    try:
-        response = api.set_contract(client_id, data=data)
-        return response.status_code == requests.codes.ok, response.json()
-    except requests.RequestException:
-        print ("Error en el request")
-        return False, {}
-
-
-def set_discount(client_id, data):
-    try:
-        response = api.set_discount(client_id, data=data)
-        return response.status_code == requests.codes.ok, response.json()
-    except requests.RequestException:
-        print ("Error en el request")
-        return False, {}
 
 
 def get_odoo_company():
@@ -166,6 +82,7 @@ def search_clients(query):
     except requests.RequestException:
         print ("Error en el request")
         return None
+
 
 def register_client(
         student_client_id,
