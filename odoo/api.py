@@ -236,7 +236,7 @@ def get_odoo_company():
     return len(companies) and companies[0] or None
 
 
-def get_shop_url(client_id):
+def get_portal_url(client_id):
     url, db, username, password = get_odoo_settings()
 
     uid = services.authenticate_user(url, db, username, password)
@@ -244,7 +244,7 @@ def get_shop_url(client_id):
 
     response = models.execute_kw(
         db, uid, password, 'edoo.api.integration',
-        'get_shop_url_with_token', [{'client_id': client_id}]
+        'get_portal_url_with_token', [{'client_id': client_id}]
     )
 
     return response
