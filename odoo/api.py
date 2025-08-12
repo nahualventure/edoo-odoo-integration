@@ -89,6 +89,21 @@ def search_clients(query):
     
     return partners
 
+def get_data_clients(client_ids, fields):
+    url, db, username, password = get_odoo_settings()
+    uid = services.authenticate_user(url, db, username, password)
+    models = ServerProxy('{}/xmlrpc/2/object'.format(url))
+
+    fields.append('parent_id')
+    # TODO: migrate to api.model call to edoo.api.integration
+    comercial_clients = models.execute_kw(db, uid, password,
+            'res.partner', 'search_read',
+            [[['parent_id', 'in', client_ids], ['type', '=', 'invoice']]],
+            {'fields': fields}
+        )
+
+    return comercial_clients
+
 
 def register_client(
         student_client_id,

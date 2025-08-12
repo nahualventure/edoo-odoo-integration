@@ -84,6 +84,16 @@ def search_clients(query):
         return None
 
 
+def call_data_clients(client_ids, fields):
+    try:
+        response = api.get_data_clients(client_ids, fields)
+
+        return response
+    except requests.RequestException:
+        print ("Error en el request")
+        return None
+
+
 def register_client(
         student_client_id,
         student_profile,
