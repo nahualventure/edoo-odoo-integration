@@ -10,6 +10,9 @@ def portal_url(client_id):
 def get_account_statements(code=''):
     return services.get_account_statements(code)
 
+def call_data_clients(client_ids, fields):
+    return services.call_data_clients(client_ids, fields)
+
 
 def call_account_statement(clients, code):
     return services.call_account_statement(clients, code)
